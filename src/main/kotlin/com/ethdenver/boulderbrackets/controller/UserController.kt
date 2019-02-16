@@ -52,4 +52,9 @@ class UserController {
 
         return ResponseEntity(Gson().toJson(userRepository.save(user)), HttpStatus.OK)
     }
+
+    @GetMapping("/users")
+    fun getAllUsers(): ResponseEntity<String> {
+        return ResponseEntity(Gson().toJson(userRepository.findAll()), HttpStatus.OK)
+    }
 }
