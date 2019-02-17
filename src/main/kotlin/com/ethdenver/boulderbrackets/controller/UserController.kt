@@ -49,6 +49,9 @@ class UserController {
         if (editRequest["email"].isJsonPrimitive) {
             user.email = editRequest["email"].asString
         }
+        if (editRequest["organization"].isJsonPrimitive) {
+            user.organization = editRequest["organization"].asString
+        }
 
         return ResponseEntity(Gson().toJson(userRepository.save(user)), HttpStatus.OK)
     }
