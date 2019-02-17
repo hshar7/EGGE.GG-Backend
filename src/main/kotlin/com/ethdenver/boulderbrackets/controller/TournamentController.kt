@@ -55,7 +55,8 @@ class TournamentController {
             game = game,
             owner = user,
             participants = arrayListOf(),
-            matches = Document()
+            matches = Document(),
+            contractHash = tournamentData["contractHash"].asString
         ))
 
         return ResponseEntity(Gson().toJson(tournament), HttpStatus.CREATED)
