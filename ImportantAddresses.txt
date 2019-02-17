@@ -1,2 +1,2 @@
-Rinkby Contract Factory: 0x7441AEdDCB827AF4a363E5e9977c613ad44e3683
+Rinkby Contract Factory: 0x972e8b03FDb99dcE15b657C17df000a310178951
 Contract Factory Owner: 0x93Ff676C1dfaF5d7f8BE18c6899088B957c651c4
