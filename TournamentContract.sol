@@ -6,6 +6,8 @@ contract TournamentFactory{
   address[] public tournamentContracts;
   address factoryOwner;
   
+  event tournamentCreated(address contractAddress);
+  
   constructor() public{
       factoryOwner = msg.sender;
   }
@@ -14,13 +16,11 @@ contract TournamentFactory{
     return tournamentContracts.length;
   }
   
-  function getContract(uint _contractNum)public view returns(address){
-      return tournamentContracts[_contractNum];
-  }
 
   function createNewTournament(address _tournamentOrganizer, uint _winnersPot) public returns(address newContract){
     Tournament tc = new Tournament(_tournamentOrganizer, _winnersPot);
     tournamentContracts.push(address(tc));
+    emit tournamentCreated(address(tc));
     return address(tc);
   }
 }
@@ -42,7 +42,7 @@ contract Tournament {
     
     //Modifiers
     modifier only_organizer(){
-        require(msg.sender==tournamentOrganizer, "Only Tournament Organizer Can Do This");
+        assert(msg.sender==tournamentOrganizer);
         _;
     }
     
@@ -62,7 +62,6 @@ contract Tournament {
         winnersPot = _winnersPot;
         state = tournamentState.ACTIVE;
     }
-    
     
     function fundTournamant()public isActive payable{
         require(!isFunded, "Tournament Is Already Fully Funded");
@@ -84,10 +83,10 @@ contract Tournament {
         uint _amount = funders[msg.sender];
         funders[msg.sender] = 0;
         msg.sender.transfer(_amount);
-        
+        currentFunds = currentFunds - _amount;
     }
     
-    function payOut(address payable _fistPlace, address payable _secondPlace)public isActive only_organizer{
+    function payOutWinners(address payable _fistPlace, address payable _secondPlace)public isActive only_organizer{
         require(isFunded, "Tournament Was Never Funded");
         //Calculate Payouts 70/30
         uint _amount2 = currentFunds/10;
