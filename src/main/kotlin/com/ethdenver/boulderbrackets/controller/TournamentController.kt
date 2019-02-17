@@ -40,9 +40,12 @@ class TournamentController {
         val tournamentData = Gson().fromJson<JsonObject>(request)
 
         val game = gameRepository.findByName(tournamentData["game"].asString)
-            .orElse(
+            .orElseGet {
                 gameRepository.insert(Game(id = UUID.randomUUID().toString(), name = tournamentData["game"].asString))
-            )
+            }
+
+        val user = userRepository.findById(tournamentData["userId"].asString)
+            .orElseThrow { ResourceNotFoundException("User", "id", tournamentData["userId"].asString) }
 
         val tournament = tournamentRepository.insert(Tournament(
             id = UUID.randomUUID().toString(),
@@ -50,11 +53,17 @@ class TournamentController {
             description = tournamentData["description"].asString,
             maxPlayers = tournamentData["maxPlayers"].asInt,
             game = game,
+            owner = user,
             participants = arrayListOf(),
             matches = Document()
         ))
 
         return ResponseEntity(Gson().toJson(tournament), HttpStatus.CREATED)
+    }
+
+    @GetMapping("/tournaments")
+    fun getAllTournaments(): ResponseEntity<String> {
+        return ResponseEntity(Gson().toJson(tournamentRepository.findAll()), HttpStatus.OK)
     }
 
     @GetMapping("/tournament/{id}")
@@ -121,7 +130,7 @@ class TournamentController {
             }
         }
 
-        return ResponseEntity(Gson().toJson(tournamentRepository.save(tournament)), HttpStatus.OK)
+        return ResponseEntity(Gson().toJson(tournamentRepository.save(tournament)), HttpStatus.OK) // TODO: Fix return here
 
     }
 }

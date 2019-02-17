@@ -1,6 +1,5 @@
 package com.ethdenver.boulderbrackets.model
 
-import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 
@@ -9,11 +8,14 @@ data class Tournament (
     val id: String,
     var name: String,
     var description: String,
+    var status: String = "NEW",
+    var prize: String = "0",
+    @DBRef
+    val owner: User,
     val maxPlayers: Int,
     @DBRef
     var game: Game,
     @DBRef
-    @Indexed(unique = true)
     val participants: ArrayList<User>,
     @DBRef
     val matches: org.bson.Document
