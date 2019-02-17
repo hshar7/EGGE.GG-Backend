@@ -34,7 +34,9 @@ contract TournamentContract {
 
     }
 
-    constructor(address _tournamentOrganizer, uint _winnersPot, uint _tournamentId) public {
+
+    function createTournament(address _tournamentOrganizer, uint _winnersPot, uint _tournamentId) public {
+        require(tournaments[_tournamentId].tournamentOrganizer == address(0));
         tournaments[_tournamentId].tournamentOrganizer = _tournamentOrganizer;
         tournaments[_tournamentId].winnersPot = _winnersPot;
     }
