@@ -18,7 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.web3j.protocol.Web3j
 import java.util.*
+import org.web3j.abi.TypeDecoder
+import org.web3j.abi.datatypes.Address
+
 
 @RestController
 @RequestMapping("/api")
@@ -35,6 +39,9 @@ class TournamentController {
     @Autowired
     lateinit var matchRepository: MatchRepository
 
+    @Autowired
+    lateinit var web3j: Web3j
+
     @PostMapping("/tournament")
     fun createTournament(@RequestBody request: String): ResponseEntity<String> {
         val tournamentData = Gson().fromJson<JsonObject>(request)
@@ -47,16 +54,25 @@ class TournamentController {
         val user = userRepository.findById(tournamentData["userId"].asString)
             .orElseThrow { ResourceNotFoundException("User", "id", tournamentData["userId"].asString) }
 
+        val response = this.web3j.ethGetTransactionReceipt(tournamentData["transactionHash"].asString).send()
+        val data = response.transactionReceipt
+            .orElseThrow { Exception("Transaction did not parse.") }
+
+        val refMethod = TypeDecoder::class.java.getDeclaredMethod("decode", String::class.java, Int::class.java, Class::class.java)
+        refMethod.isAccessible = true
+        val address = refMethod.invoke(null, data.logs[0].data, 0, Address::class.java) as Address
+
         val tournament = tournamentRepository.insert(Tournament(
             id = UUID.randomUUID().toString(),
             name = tournamentData["name"].asString,
             description = tournamentData["description"].asString,
             maxPlayers = tournamentData["maxPlayers"].asInt,
+            prize = tournamentData["prize"].asString,
             game = game,
             owner = user,
             participants = arrayListOf(),
             matches = Document(),
-            contractHash = tournamentData["contractHash"].asString
+            contractAddress = address.toString()
         ))
 
         return ResponseEntity(Gson().toJson(tournament), HttpStatus.CREATED)
@@ -80,6 +96,7 @@ class TournamentController {
     }
 
     @PostMapping("/tournament/{tournamentId}/participant/{userId}")
+    @Synchronized
     fun participate(
         @PathVariable("tournamentId") tournamentId: String,
         @PathVariable("userId") userId: String): ResponseEntity<String> {
@@ -105,14 +122,14 @@ class TournamentController {
                 var player2: User? = null
 
                 if (i <= tournament.maxPlayers / 2) {
-                    player1 = participants[(0..participants.size-1).random()]
+                    player1 = participants[(0..participants.size - 1).random()]
                     participants.remove(player1)
-                    player2 = participants[(0..participants.size-1).random()]
+                    player2 = participants[(0..participants.size - 1).random()]
                     participants.remove(player2)
 
                 } else {
-                    match1 = matchesStack.pop()
                     match2 = matchesStack.pop()
+                    match1 = matchesStack.pop()
                 }
 
                 val match = Match(
@@ -130,8 +147,8 @@ class TournamentController {
                 tournament.matches[i.toString()] = match
             }
         }
-
-        return ResponseEntity(Gson().toJson(tournamentRepository.save(tournament)), HttpStatus.OK) // TODO: Fix return here
+        tournamentRepository.save(tournament)
+        return ResponseEntity("{}", HttpStatus.OK) // TODO: Fix return here
 
     }
 }

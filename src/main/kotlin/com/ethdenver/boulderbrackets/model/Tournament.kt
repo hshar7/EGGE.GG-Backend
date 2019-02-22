@@ -10,7 +10,7 @@ data class Tournament (
     var name: String,
     var description: String,
     var status: String = "NEW",
-    var prize: String = "0",
+    var prize: String,
     @DBRef
     val owner: User,
     val maxPlayers: Int,
@@ -21,5 +21,5 @@ data class Tournament (
     @DBRef
     val matches: org.bson.Document,
     @Indexed(unique = true)
-    val contractHash: String
+    val contractAddress: String
 )
