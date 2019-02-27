@@ -110,8 +110,7 @@ class TournamentController {
         tournament.participants.add(user)
 
         if (tournament.participants.size == tournament.maxPlayers) {
-
-            val matchesStack = Stack<Match>()
+            val matchesQueue: Queue<Match> = ArrayDeque<Match>()
             val participants = tournament.participants.toMutableList()
 
             for (i in 1..tournament.maxPlayers - 1) {
@@ -128,8 +127,8 @@ class TournamentController {
                     participants.remove(player2)
 
                 } else {
-                    match2 = matchesStack.pop()
-                    match1 = matchesStack.pop()
+                    match1 = matchesQueue.remove()
+                    match2 = matchesQueue.remove()
                 }
 
                 val match = Match(
@@ -142,7 +141,7 @@ class TournamentController {
                     match2 = match2
                 )
 
-                matchesStack.push(match)
+                matchesQueue.add(match)
                 matchRepository.insert(match)
                 tournament.matches[i.toString()] = match
             }
