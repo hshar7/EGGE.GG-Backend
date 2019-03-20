@@ -121,9 +121,9 @@ class TournamentController {
                 var player2: User? = null
 
                 if (i <= tournament.maxPlayers / 2) {
-                    player1 = participants[(0..participants.size - 1).random()]
+                    player1 = participants[(0.until(participants.size - 1)).random()]
                     participants.remove(player1)
-                    player2 = participants[(0..participants.size - 1).random()]
+                    player2 = participants[(0.until(participants.size - 1)).random()]
                     participants.remove(player2)
 
                 } else {
@@ -146,8 +146,10 @@ class TournamentController {
                 tournament.matches[i.toString()] = match
             }
         }
-        tournamentRepository.save(tournament)
-        return ResponseEntity("{}", HttpStatus.OK) // TODO: Fix return here
 
+        return ResponseEntity(
+            Gson().toJson(tournamentRepository.save(tournament)),
+            HttpStatus.OK
+        )
     }
 }
