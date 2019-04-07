@@ -1,0 +1,61 @@
+package com.hshar.eggegg.controller
+
+import com.hshar.eggegg.exception.ResourceNotFoundException
+import com.hshar.eggegg.model.User
+import com.hshar.eggegg.repository.UserRepository
+import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import java.util.*
+
+@RestController
+@RequestMapping("/api")
+class UserController {
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @PostMapping("/user")
+    fun createUser(@RequestBody requestBody: String): ResponseEntity<String> {
+        val signUpRequest = Gson().fromJson<JsonObject>(requestBody)
+
+        val user = userRepository.findByPublicAddress(signUpRequest["accountAddress"].asString)
+            .orElseGet {
+                userRepository.insert(User(
+                    id = UUID.randomUUID().toString(),
+                    publicAddress = signUpRequest["accountAddress"].asString
+                ))
+            }
+
+        return ResponseEntity(Gson().toJson(user), HttpStatus.OK)
+    }
+
+    @PostMapping("/user/{id}/metadata")
+    fun editUserMetadata(@PathVariable("id") id: String, @RequestBody requestBody: String): ResponseEntity<String> {
+        val editRequest = Gson().fromJson<JsonObject>(requestBody)
+
+        val user = userRepository.findById(id)
+            .orElseThrow { ResourceNotFoundException("User", "id", id) }
+
+        if (editRequest["name"] != null) {
+            user.name = editRequest["name"].asString
+        }
+        if (editRequest["email"] != null) {
+            user.email = editRequest["email"].asString
+        }
+        if (editRequest["organization"] != null) {
+            user.organization = editRequest["organization"].asString
+        }
+
+        return ResponseEntity(Gson().toJson(userRepository.save(user)), HttpStatus.OK)
+    }
+
+    @GetMapping("/users")
+    fun getAllUsers(): ResponseEntity<String> {
+        return ResponseEntity(Gson().toJson(userRepository.findAll()), HttpStatus.OK)
+    }
+}
