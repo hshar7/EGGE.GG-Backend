@@ -1,5 +1,7 @@
 package com.hshar.eggegg.controller
 
+import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.set
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.Match
 import com.hshar.eggegg.model.User
@@ -8,11 +10,14 @@ import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.mongodb.DBRef
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.web3j.utils.Convert
+import org.web3j.utils.Convert.fromWei
 import java.util.*
 
 @RestController
@@ -42,6 +47,12 @@ class TournamentController {
 
         tournament.matches.forEach {
             tournament.matches[it.key] = matchRepository.findById((it.value as DBRef).id.toString())
+        }
+
+        if (tournament.tokenVersion == 0) {
+            val jsonObj = Gson().fromJson<JsonObject>(Gson().toJson(tournament))
+            jsonObj["prize"] = fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER)
+            return ResponseEntity(jsonObj.toString(), HttpStatus.OK)
         }
 
         return ResponseEntity(Gson().toJson(tournament), HttpStatus.OK)
