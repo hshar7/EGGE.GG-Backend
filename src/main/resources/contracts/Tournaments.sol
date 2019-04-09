@@ -15,8 +15,8 @@ contract Tournaments {
         address token;
         uint tokenVersion; // The version of the token being used (0 for ETH, 20 for ERC20, 721 for ERC721)
         uint balance;
-        bool hasPaidOut;
         uint[] prizeDistribution;
+        uint maxPlayers;
     }
 
     uint public numTournaments;
@@ -37,11 +37,6 @@ contract Tournaments {
 
     modifier onlyOrganizer(address _sender, uint _tournamentId) {
         require(_sender == tournaments[_tournamentId].organizer);
-        _;
-    }
-
-    modifier hasNotPaid(uint _tournamentId) {
-        require(!tournaments[_tournamentId].hasPaidOut);
         _;
     }
 
@@ -76,6 +71,7 @@ contract Tournaments {
         tour.tokenVersion = _tokenVersion;
         tour.prizeDistribution = _prizeDistribution;
         tour.active = false;
+        tour.maxPlayers = _maxPlayers;
 
         if (_tokenVersion != 0) {
             tour.token = _token;
@@ -162,6 +158,11 @@ contract Tournaments {
         emit TournamentFinalized( _tournamentId, _winners);
 
         callStarted = false;
+    }
+
+    function getTournament(uint _tournamentId) external view returns (Tournament memory) {
+
+        return tournaments[_tournamentId];
     }
 
     function transferTokens(uint _tournamentId, address payable _to, uint _amount) internal {
