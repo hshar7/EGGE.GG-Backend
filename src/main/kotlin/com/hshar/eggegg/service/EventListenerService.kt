@@ -1,6 +1,5 @@
 package com.hshar.eggegg.service
 
-import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.Game
 import com.hshar.eggegg.model.Tournament
@@ -27,6 +26,9 @@ import org.web3j.tx.gas.StaticGasProvider
 import java.util.*
 import com.github.kittinunf.result.Result
 import com.github.salomonbrys.kotson.get
+import com.hshar.eggegg.contract.Tournaments
+import org.web3j.abi.datatypes.generated.Uint256
+import kotlin.collections.ArrayList
 
 @Service
 class EventListenerService {
@@ -47,14 +49,13 @@ class EventListenerService {
     lateinit var web3DataRepository: Web3DataRepository
 
     companion object {
-        const val CONTRACT_ADDRESS = "0x4c94f4ac7f93bd6f145134eae9e127de09176c1d"
+        const val CONTRACT_ADDRESS = "0x056f0378db3cf4908a042c9a841ec792998bb3b4"
         const val GAS_PRICE = 200
         const val GAS_LIMIT = 4500000
     }
 
     // TODO: Implement reconnect logic for web socket
     // TODO: Implement a bounty black list
-    // TODO: Parse data object
     @Bean
     fun listenToContractEvents() {
 
@@ -71,6 +72,7 @@ class EventListenerService {
         tournamentIssuedEvent(tournamentsContract)
         contributionAddedEvent(tournamentsContract)
         tournamentDeadlineChangedEvent(tournamentsContract)
+        tournamentFinalizedEvent(tournamentsContract)
     }
 
     private fun tournamentDeadlineChangedEvent(tournamentsContract: Tournaments) {
@@ -181,11 +183,19 @@ class EventListenerService {
                 }
             }
 
+            val prizeDistInts: ArrayList<Int> = arrayListOf()
+            for (d: Uint256 in it._prizeDistribution as List<Uint256>) {
+                prizeDistInts.add(d.value.toInt())
+            }
+
             tournamentRepository.insert(Tournament(
                 id = UUID.randomUUID().toString(),
                 tournamentId = it._tournamentId.toInt(),
                 deadline = Date(it._deadline.toLong()),
                 tokenVersion = it._tokenVersion.toInt(),
+                maxPlayers = it._maxPlayers.toInt(),
+                prizeDistribution = prizeDistInts,
+                winners = emptyList(),
                 token = it._token,
                 tokenName = tokenName,
                 tokenPrice = tokenPrice,
@@ -194,12 +204,39 @@ class EventListenerService {
                 game = game,
                 matches = Document(),
                 description = dataObj["description"].asString,
-                maxPlayers = dataObj["maxPlayers"].asInt,
                 name = dataObj["name"].asString,
                 owner = user
             ))
 
             web3DataRepository.save(Web3Data(id = "TournamentIssued", fromBlock = it.log.blockNumber + 1.toBigInteger()))
+        }
+    }
+
+    private fun tournamentFinalizedEvent(tournamentsContract: Tournaments) {
+
+        var fromBlock = 0.toBigInteger()
+        web3DataRepository.findById("TournamentFinalized").ifPresent {
+            fromBlock = it.fromBlock
+        }
+
+        tournamentsContract.tournamentFinalizedEventFlowable(
+            DefaultBlockParameter.valueOf(fromBlock),
+            DefaultBlockParameterName.LATEST).subscribe {
+
+            println("Tournament ${it._tournamentId} finalized.")
+
+            val tournament = tournamentRepository.findByTournamentId(it._tournamentId.toInt())
+                .orElseThrow {
+                    ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
+                }
+
+            tournament.winners = it._winners
+            tournament.status = "COMPLETE"
+            tournamentRepository.save(tournament)
+
+            web3DataRepository.save(
+                Web3Data(id = "TournamentFinalized", fromBlock = it.log.blockNumber + 1.toBigInteger())
+            )
         }
     }
 }

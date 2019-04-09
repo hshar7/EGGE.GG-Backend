@@ -20,6 +20,8 @@ data class Tournament (
     var prize: Int,
     @DBRef val owner: User,
     val maxPlayers: Int,
+    val prizeDistribution: ArrayList<Int>,
+    var winners: List<String>,
     @DBRef var game: Game,
     @DBRef val participants: ArrayList<User>,
     @DBRef val matches: org.bson.Document
