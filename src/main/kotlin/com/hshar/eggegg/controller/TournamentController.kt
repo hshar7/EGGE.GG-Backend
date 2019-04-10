@@ -110,6 +110,8 @@ class TournamentController {
             }
         }
 
+        tournamentRepository.save(tournament)
+
         return ResponseEntity(
             "{\"status\": \"ok\"}", // TODO: Still need to fix this!
             HttpStatus.OK
