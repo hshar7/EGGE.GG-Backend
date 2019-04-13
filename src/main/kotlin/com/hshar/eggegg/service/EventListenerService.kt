@@ -1,14 +1,6 @@
 package com.hshar.eggegg.service
 
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Game
-import com.hshar.eggegg.model.Tournament
-import com.hshar.eggegg.model.User
-import com.hshar.eggegg.model.Web3Data
-import com.hshar.eggegg.repository.GameRepository
-import com.hshar.eggegg.repository.TournamentRepository
-import com.hshar.eggegg.repository.UserRepository
-import com.hshar.eggegg.repository.Web3DataRepository
 import com.github.kittinunf.fuel.httpGet
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
@@ -27,6 +19,11 @@ import java.util.*
 import com.github.kittinunf.result.Result
 import com.github.salomonbrys.kotson.get
 import com.hshar.eggegg.contract.Tournaments
+import com.hshar.eggegg.model.*
+import com.hshar.eggegg.repository.*
+import com.mongodb.DBRef
+import com.mongodb.client.model.Accumulators.last
+import org.web3j.abi.datatypes.Address
 import org.web3j.abi.datatypes.generated.Uint256
 import kotlin.collections.ArrayList
 
@@ -40,6 +37,9 @@ class EventListenerService {
     lateinit var tournamentRepository: TournamentRepository
 
     @Autowired
+    lateinit var matchRepository: MatchRepository
+
+    @Autowired
     lateinit var userRepository: UserRepository
 
     @Autowired
@@ -49,7 +49,7 @@ class EventListenerService {
     lateinit var web3DataRepository: Web3DataRepository
 
     companion object {
-        const val CONTRACT_ADDRESS = "0x056f0378db3cf4908a042c9a841ec792998bb3b4"
+        const val CONTRACT_ADDRESS = "0xa1242625874cc4e50bf12d4a343d45fb042c8b43"
         const val GAS_PRICE = 200
         const val GAS_LIMIT = 4500000
     }
@@ -115,7 +115,7 @@ class EventListenerService {
                     ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
                 }
 
-            tournament.prize += it._amount.toInt()
+            tournament.prize += it._amount
             tournamentRepository.save(tournament)
 
             web3DataRepository.save(Web3Data(id = "ContributionAdded", fromBlock = it.log.blockNumber + 1.toBigInteger()))
@@ -199,7 +199,7 @@ class EventListenerService {
                 token = it._token,
                 tokenName = tokenName,
                 tokenPrice = tokenPrice,
-                prize = 0,
+                prize = 0.toBigInteger(),
                 participants = arrayListOf(),
                 game = game,
                 matches = Document(),
@@ -232,6 +232,24 @@ class EventListenerService {
 
             tournament.winners = it._winners
             tournament.status = "COMPLETE"
+            if (!tournament.matches.isEmpty()) {
+                val id = tournament.matches[(tournament.maxPlayers - 1).toString()] as DBRef
+                val match = matchRepository.findById(id.id.toString())
+                        .orElseThrow { ResourceNotFoundException("Match", "id", id.id.toString()) }
+
+                var address = ""
+                for (d: Address in it._winners as List<Address>) {
+                    address = d.toString()
+                    break
+                }
+                if (match.player1!!.publicAddress == address) {
+                    match.winner = match.player1
+                } else {
+                    match.winner = match.player2
+                }
+
+                matchRepository.save(match)
+            }
             tournamentRepository.save(tournament)
 
             web3DataRepository.save(

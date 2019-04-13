@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./inherited/ERC20Token.sol";
 import "./inherited/ERC721Basic.sol";
 
-// Contract: 0x056f0378db3cf4908a042c9a841ec792998bb3b4
+// Contract: 0xa1242625874cc4e50bf12d4a343d45fb042c8b43
 
 contract Tournaments {
 
@@ -15,13 +15,12 @@ contract Tournaments {
         address token;
         uint tokenVersion; // The version of the token being used (0 for ETH, 20 for ERC20, 721 for ERC721)
         uint balance;
-        uint[] prizeDistribution;
         uint maxPlayers;
     }
 
     uint public numTournaments;
     mapping(uint => Tournament) public tournaments;
-    mapping (uint => mapping (uint => bool)) public tokenBalances;
+    mapping(uint => uint[]) public prizeDistributions;
 
     bool public callStarted; // Ensures mutex for the entire contract
 
@@ -69,8 +68,8 @@ contract Tournaments {
         tour.organizer = _organizer;
         tour.deadline = _deadline;
         tour.tokenVersion = _tokenVersion;
-        tour.prizeDistribution = _prizeDistribution;
-        tour.active = false;
+        prizeDistributions[tournamentId] = _prizeDistribution;
+        tour.active = true;
         tour.maxPlayers = _maxPlayers;
 
         if (_tokenVersion != 0) {
@@ -95,6 +94,7 @@ contract Tournaments {
 
     function contribute(uint _tournamentId, uint _amount) public payable
     validateTournamentArrayIndex(_tournamentId)
+    tournamentActive(_tournamentId)
     callNotStarted {
 
         require(_amount > 0); // Contributions of 0 tokens or token ID 0 should fail
@@ -111,12 +111,12 @@ contract Tournaments {
             tournaments[_tournamentId].balance += _amount;
 
         } else if (tournaments[_tournamentId].tokenVersion == 721) {
-            require(msg.value == 0);
-            ERC721BasicToken(tournaments[_tournamentId].token).transferFrom(
-                msg.sender,
-                address(this),
-                _amount);
-            tokenBalances[_tournamentId][_amount] = true;
+            // require(msg.value == 0);
+            // ERC721BasicToken(tournaments[_tournamentId].token).transferFrom(
+            //     msg.sender,
+            //     address(this),
+            //     _amount);
+            // tokenBalances[_tournamentId][_amount] = true;
         } else {
             revert();
         }
@@ -146,10 +146,10 @@ contract Tournaments {
 
         callStarted = true;
 
-        require(_winners.length == tournaments[_tournamentId].prizeDistribution.length);
+        require(_winners.length == prizeDistributions[_tournamentId].length);
 
         for (uint i = 0; i < _winners.length; i++) {
-            uint amount = tournaments[_tournamentId].prizeDistribution[i] / 100 * tournaments[_tournamentId].balance;
+            uint amount = prizeDistributions[_tournamentId][i] / 100 * tournaments[_tournamentId].balance;
             transferTokens(_tournamentId, _winners[i], amount);
         }
 
@@ -160,20 +160,19 @@ contract Tournaments {
         callStarted = false;
     }
 
-    function getTournament(uint _tournamentId) external view returns (Tournament memory) {
-
-        return tournaments[_tournamentId];
-    }
-
     function transferTokens(uint _tournamentId, address payable _to, uint _amount) internal {
         if (tournaments[_tournamentId].tokenVersion == 0) {
-            require(_amount > 0);
+            if (_amount <= 0) {
+                return;
+            }
 
             tournaments[_tournamentId].balance -= _amount;
 
             _to.transfer(_amount);
         } else if (tournaments[_tournamentId].tokenVersion == 20) {
-            require(_amount > 0);
+            if (_amount <= 0) {
+                return;
+            }
 
             tournaments[_tournamentId].balance -= _amount;
 

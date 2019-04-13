@@ -3,6 +3,7 @@ package com.hshar.eggegg.model
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
+import java.math.BigInteger
 import java.util.*
 
 @Document(collection="tournaments")
@@ -17,7 +18,7 @@ data class Tournament (
     var name: String,
     var description: String,
     var status: String = "NEW",
-    var prize: Int,
+    var prize: BigInteger,
     @DBRef val owner: User,
     val maxPlayers: Int,
     val prizeDistribution: ArrayList<Int>,

@@ -27,9 +27,6 @@ class TournamentController {
     lateinit var tournamentRepository: TournamentRepository
 
     @Autowired
-    lateinit var gameRepository: GameRepository
-
-    @Autowired
     lateinit var userRepository: UserRepository
 
     @Autowired
