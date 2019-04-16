@@ -11,6 +11,8 @@ import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.hshar.eggegg.model.Game
+import com.hshar.eggegg.model.Tournament
 import com.mongodb.DBRef
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -32,6 +34,9 @@ class TournamentController {
     @Autowired
     lateinit var matchRepository: MatchRepository
 
+    @Autowired
+    lateinit var gameRepository: GameRepository
+
     @GetMapping("/tournaments")
     fun getAllTournaments(): ResponseEntity<String> {
         return ResponseEntity(Gson().toJson(tournamentRepository.findAll()), HttpStatus.OK)
@@ -39,20 +44,9 @@ class TournamentController {
 
     @GetMapping("/tournament/{id}")
     fun getTournament(@PathVariable("id") id: String): ResponseEntity<String> {
-        val tournament = tournamentRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("tournament", "id", id) }
+        val response = prepTournamentResponse(id)
 
-        tournament.matches.forEach {
-            tournament.matches[it.key] = matchRepository.findById((it.value as DBRef).id.toString())
-        }
-
-        if (tournament.token.tokenVersion == 0) {
-            val jsonObj = Gson().fromJson<JsonObject>(Gson().toJson(tournament))
-            jsonObj["prize"] = fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER)
-            return ResponseEntity(jsonObj.toString(), HttpStatus.OK)
-        }
-
-        return ResponseEntity(Gson().toJson(tournament), HttpStatus.OK)
+        return ResponseEntity(response.toString(), HttpStatus.OK)
     }
 
     @PostMapping("/tournament/{tournamentId}/participant/{userId}")
@@ -105,13 +99,44 @@ class TournamentController {
                 matchRepository.insert(match)
                 tournament.matches[i.toString()] = match
             }
+        } else if (tournament.participants.size > tournament.maxPlayers) { // No save
+            return ResponseEntity(
+                    prepTournamentResponse(tournament.id).toString(),
+                    HttpStatus.OK
+            )
         }
 
         tournamentRepository.save(tournament)
 
         return ResponseEntity(
-            "{\"status\": \"ok\"}", // TODO: Still need to fix this!
+            prepTournamentResponse(tournament.id).toString(),
             HttpStatus.OK
         )
+    }
+
+    @GetMapping("/tournament/tournamentsByGameId/{gameId}")
+    fun findAllByGameId(@PathVariable("gameId") gameId: String): List<Tournament> {
+
+        val game = gameRepository.findById(gameId).orElseThrow{
+            ResourceNotFoundException("Game", "id", gameId)
+        }
+
+        return tournamentRepository.findByGame(game)
+    }
+
+    private fun prepTournamentResponse(id: String): JsonObject {
+        val tournament = tournamentRepository.findById(id)
+                .orElseThrow { ResourceNotFoundException("tournament", "id", id) }
+
+        tournament.matches.forEach {
+            tournament.matches[it.key] = matchRepository.findById((it.value as DBRef).id.toString())
+        }
+        val jsonObj = Gson().fromJson<JsonObject>(Gson().toJson(tournament))
+
+        if (tournament.token.tokenVersion == 0) {
+            jsonObj["prize"] = fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER)
+        }
+
+        return jsonObj
     }
 }
