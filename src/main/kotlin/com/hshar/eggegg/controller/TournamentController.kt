@@ -46,7 +46,7 @@ class TournamentController {
             tournament.matches[it.key] = matchRepository.findById((it.value as DBRef).id.toString())
         }
 
-        if (tournament.tokenVersion == 0) {
+        if (tournament.token.tokenVersion == 0) {
             val jsonObj = Gson().fromJson<JsonObject>(Gson().toJson(tournament))
             jsonObj["prize"] = fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER)
             return ResponseEntity(jsonObj.toString(), HttpStatus.OK)

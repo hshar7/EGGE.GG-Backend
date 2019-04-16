@@ -1,10 +1,9 @@
 pragma solidity 0.5.7;
-pragma experimental ABIEncoderV2;
 
 import "./inherited/ERC20Token.sol";
 import "./inherited/ERC721Basic.sol";
 
-// Contract: 0xa1242625874cc4e50bf12d4a343d45fb042c8b43
+// Contract: 0x389cbba120b927c8d1ff1890efd68dcbde5c0929
 
 contract Tournaments {
 
@@ -147,15 +146,20 @@ contract Tournaments {
         callStarted = true;
 
         require(_winners.length == prizeDistributions[_tournamentId].length);
+        uint[] memory payouts = new uint[](_winners.length);
 
         for (uint i = 0; i < _winners.length; i++) {
-            uint amount = prizeDistributions[_tournamentId][i] / 100 * tournaments[_tournamentId].balance;
-            transferTokens(_tournamentId, _winners[i], amount);
+            uint amount = uint(prizeDistributions[_tournamentId][i] * tournaments[_tournamentId].balance) / 100;
+            payouts[i] = amount;
+        }
+
+        for (uint i = 0; i < payouts.length; i++) {
+            transferTokens(_tournamentId, _winners[i], payouts[i]);
         }
 
         tournaments[_tournamentId].active = false;
 
-        emit TournamentFinalized( _tournamentId, _winners);
+        emit TournamentFinalized( _tournamentId, _winners, payouts);
 
         callStarted = false;
     }
@@ -192,5 +196,5 @@ contract Tournaments {
     event TournamentIssued(uint _tournamentId, address payable _organizer, string _data, uint _deadline, address _token, uint _tokenVersion, uint _maxPlayers, uint[] _prizeDistribution);
     event ContributionAdded(uint _tournamentId, address payable _contributor, uint _amount);
     event TournamentDeadlineChanged(uint _tournamentId, address _changer, uint _deadline);
-    event TournamentFinalized(uint _tournamentId, address payable[] _winners);
+    event TournamentFinalized(uint _tournamentId, address payable[] _winners, uint[] payouts);
 }

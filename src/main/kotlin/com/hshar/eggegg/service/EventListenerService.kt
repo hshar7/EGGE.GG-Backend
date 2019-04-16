@@ -1,12 +1,6 @@
 package com.hshar.eggegg.service
 
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.github.kittinunf.fuel.httpGet
-import com.github.salomonbrys.kotson.fromJson
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import io.ipfs.kotlin.defaults.InfuraIPFS
-import org.bson.Document
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
@@ -16,16 +10,12 @@ import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.tx.ReadonlyTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import java.util.*
-import com.github.kittinunf.result.Result
-import com.github.salomonbrys.kotson.get
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.model.*
 import com.hshar.eggegg.repository.*
+import com.hshar.eggegg.service.eventprocessor.TournamentIssuedProcessor
 import com.mongodb.DBRef
-import com.mongodb.client.model.Accumulators.last
 import org.web3j.abi.datatypes.Address
-import org.web3j.abi.datatypes.generated.Uint256
-import kotlin.collections.ArrayList
 
 @Service
 class EventListenerService {
@@ -40,22 +30,21 @@ class EventListenerService {
     lateinit var matchRepository: MatchRepository
 
     @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var gameRepository: GameRepository
+    lateinit var tournamentIssuedProcessor: TournamentIssuedProcessor
 
     @Autowired
     lateinit var web3DataRepository: Web3DataRepository
 
     companion object {
-        const val CONTRACT_ADDRESS = "0xa1242625874cc4e50bf12d4a343d45fb042c8b43"
+        const val CONTRACT_ADDRESS = "0x389cbba120b927c8d1ff1890efd68dcbde5c0929"
         const val GAS_PRICE = 200
         const val GAS_LIMIT = 4500000
     }
 
     // TODO: Implement reconnect logic for web socket
-    // TODO: Implement a bounty black list
+    // TODO: Implement a black list
+    // TODO: Separate each event into own object. This boy getting too big.
+    // TODO: Add a way to prevent processing of multiple messages. Using Redis?
     @Bean
     fun listenToContractEvents() {
 
@@ -135,79 +124,7 @@ class EventListenerService {
 
             println("Tournament ${it._tournamentId} create by ${it._organizer}.")
 
-            val user = userRepository.findByPublicAddress(it._organizer).orElseGet {
-                userRepository.insert(User(
-                    id = UUID.randomUUID().toString(),
-                    publicAddress = it._organizer
-                ))
-            }
-
-            val data = InfuraIPFS().get.cat(it._data)
-            val dataObj = Gson().fromJson<JsonObject>(data) // TODO: Create own data object
-
-            val game = gameRepository.findByName(dataObj["game"].asString).orElseGet {
-                gameRepository.insert(Game(
-                    id = UUID.randomUUID().toString(),
-                    name = dataObj["game"].asString
-                ))
-            }
-
-            var tokenName = "ETH"
-            var tokenPrice = 0.toFloat()
-            if (it._tokenVersion == 20.toBigInteger()) {
-
-                val (_, _, result) =
-                    "http://api.ethplorer.io/getTokenInfo/${it._token}/?apiKey=freekey".httpGet().responseString()
-
-                when (result) {
-                    is Result.Failure -> {
-                        throw result.getException()
-                    }
-                    is Result.Success -> {
-                        val resultObject = Gson().fromJson<JsonObject>(result.get())
-                        tokenName = resultObject["symbol"].toString()
-                        tokenPrice = resultObject["price"]["rate"].asFloat
-                    }
-                }
-            } else {
-                val (_, _, result) = "https://api.coincap.io/v2/assets/ethereum".httpGet().responseString()
-
-                when (result) {
-                    is Result.Failure -> {
-                        throw result.getException()
-                    }
-                    is Result.Success -> {
-                        val resultObject = Gson().fromJson<JsonObject>(result.get())
-                        tokenPrice = resultObject["data"]["priceUsd"].asFloat
-                    }
-                }
-            }
-
-            val prizeDistInts: ArrayList<Int> = arrayListOf()
-            for (d: Uint256 in it._prizeDistribution as List<Uint256>) {
-                prizeDistInts.add(d.value.toInt())
-            }
-
-            tournamentRepository.insert(Tournament(
-                id = UUID.randomUUID().toString(),
-                tournamentId = it._tournamentId.toInt(),
-                deadline = Date(it._deadline.toLong()),
-                tokenVersion = it._tokenVersion.toInt(),
-                maxPlayers = it._maxPlayers.toInt(),
-                prizeDistribution = prizeDistInts,
-                winners = emptyList(),
-                token = it._token,
-                tokenName = tokenName,
-                tokenPrice = tokenPrice,
-                prize = 0.toBigInteger(),
-                participants = arrayListOf(),
-                game = game,
-                matches = Document(),
-                description = dataObj["description"].asString,
-                name = dataObj["name"].asString,
-                owner = user
-            ))
-
+            tournamentIssuedProcessor.process(it)
             web3DataRepository.save(Web3Data(id = "TournamentIssued", fromBlock = it.log.blockNumber + 1.toBigInteger()))
         }
     }
