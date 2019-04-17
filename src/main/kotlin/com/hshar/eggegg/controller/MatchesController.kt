@@ -3,6 +3,7 @@ package com.hshar.eggegg.controller
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.repository.MatchRepository
 import com.google.gson.Gson
+import com.hshar.eggegg.model.Match
 import com.mongodb.DBRef
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -36,9 +37,12 @@ class MatchesController {
 
         val newMatch = matchRepository.save(match)
 
+        val matches = mutableListOf<Match>()
         newMatch.tournament.matches.forEach {
             val thisMatch = matchRepository.findById((it.value as DBRef).id.toString())
                 .orElseThrow { ResourceNotFoundException("Match", "id", (it.value as DBRef).id.toString()) }
+
+            matches.add(thisMatch)
 
             var changed = false
             if (thisMatch.match1 != null) {
@@ -61,6 +65,6 @@ class MatchesController {
             }
         }
 
-        return ResponseEntity(Gson().toJson(newMatch), HttpStatus.OK)
+        return ResponseEntity(Gson().toJson(matches), HttpStatus.OK)
     }
 }
