@@ -6,13 +6,16 @@ import com.google.gson.JsonObject
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.Game
+import com.hshar.eggegg.model.Notification
 import com.hshar.eggegg.model.Tournament
 import com.hshar.eggegg.model.User
 import com.hshar.eggegg.repository.GameRepository
 import com.hshar.eggegg.repository.TokenRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
-import io.ipfs.kotlin.defaults.InfuraIPFS
+import com.hshar.eggegg.service.NotificationService
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.bson.Document
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -34,21 +37,28 @@ class TournamentIssuedProcessor {
     @Autowired
     lateinit var tokenRepository: TokenRepository
 
+    @Autowired
+    lateinit var notificationService: NotificationService
+
     fun process(eventData: Tournaments.TournamentIssuedEventResponse) {
         val user = userRepository.findByPublicAddress(eventData._organizer).orElseGet {
             userRepository.insert(User(
                     id = UUID.randomUUID().toString(),
-                    publicAddress = eventData._organizer
+                    publicAddress = eventData._organizer,
+                    createdAt = Date(),
+                    updatedAt = Date()
             ))
         }
-
-        val data = InfuraIPFS().get.cat(eventData._data)
+        val request = Request.Builder().url("https://ipfs.infura.io:5001/api/v0/cat?arg=${eventData._data}").build()
+        val data = OkHttpClient().newCall(request).execute().body()!!.string()
         val dataObj = Gson().fromJson<JsonObject>(data) // TODO: Create own data object
 
         val game = gameRepository.findByName(dataObj["game"].asString).orElseGet {
             gameRepository.insert(Game(
                     id = UUID.randomUUID().toString(),
-                    name = dataObj["game"].asString
+                    name = dataObj["game"].asString,
+                    createdAt = Date(),
+                    updatedAt = Date()
             ))
         }
 
@@ -60,7 +70,7 @@ class TournamentIssuedProcessor {
             prizeDistInts.add(d.value.toInt())
         }
 
-        tournamentRepository.insert(Tournament(
+        val tournament = Tournament(
                 id = UUID.randomUUID().toString(),
                 tournamentId = eventData._tournamentId.toInt(),
                 deadline = Date(eventData._deadline.toLong()),
@@ -74,7 +84,19 @@ class TournamentIssuedProcessor {
                 matches = Document(),
                 description = dataObj["description"].asString,
                 name = dataObj["name"].asString,
-                owner = user
+                owner = user,
+                createdAt = Date(),
+                updatedAt = Date()
+        )
+
+        tournamentRepository.insert(tournament)
+
+        notificationService.newNotification(Notification(
+            id = UUID.randomUUID().toString(),
+            user = user,
+            url = "/tournament/${tournament.id}",
+            message = "${tournament.name} Created!",
+            createdAt = Date()
         ))
     }
 }

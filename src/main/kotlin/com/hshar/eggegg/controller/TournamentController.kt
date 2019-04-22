@@ -92,7 +92,9 @@ class TournamentController {
                     player2 = player2,
                     winner = null,
                     match1 = match1,
-                    match2 = match2
+                    match2 = match2,
+                    createdAt = Date(),
+                    updatedAt = Date()
                 )
 
                 matchesQueue.add(match)

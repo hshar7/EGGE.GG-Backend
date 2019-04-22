@@ -27,7 +27,9 @@ class UserController {
             .orElseGet {
                 userRepository.insert(User(
                     id = UUID.randomUUID().toString(),
-                    publicAddress = signUpRequest["accountAddress"].asString
+                    publicAddress = signUpRequest["accountAddress"].asString,
+                    createdAt = Date(),
+                    updatedAt = Date()
                 ))
             }
 

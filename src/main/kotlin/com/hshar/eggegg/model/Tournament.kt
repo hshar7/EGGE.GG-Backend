@@ -1,5 +1,7 @@
 package com.hshar.eggegg.model
 
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
@@ -22,5 +24,7 @@ data class Tournament (
     var winners: List<String>,
     @DBRef var game: Game,
     @DBRef val participants: ArrayList<User>,
-    @DBRef val matches: org.bson.Document
+    @DBRef val matches: org.bson.Document,
+    @CreatedDate val createdAt: Date,
+    @LastModifiedDate var updatedAt: Date
 )

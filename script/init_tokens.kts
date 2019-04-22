@@ -1,6 +1,5 @@
 #!/usr/bin/env kscript
 @file:DependsOn("org.mongodb:mongo-java-driver:3.8.2")
-import java.util.UUID
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoClient
 import com.mongodb.MongoClientSettings
@@ -9,6 +8,7 @@ import com.mongodb.ServerAddress
 import com.mongodb.MongoCredential
 import com.mongodb.MongoClientOptions
 import com.mongodb.client.model.IndexOptions
+import java.util.*
 
 var mongoUrl: String = "mongodb://localhost:27017/eggegg"
 val client = MongoClients.create(mongoUrl)
@@ -29,6 +29,8 @@ eth.append("name", "Ether")
 eth.append("address", "0x0000000000000000000000000000000000000000")
 eth.append("usdPrice", 160.toFloat())
 eth.append("tokenVersion", 0)
+eth.append("createdAt", Date())
+eth.append("updatedAt", Date())
 tokens.insertOne(eth)
 
 val dai = org.bson.Document()
@@ -38,6 +40,8 @@ dai.append("name", "DAI")
 dai.append("address", "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359")
 dai.append("usdPrice", 1.toFloat())
 dai.append("tokenVersion", 20)
+dai.append("createdAt", Date())
+dai.append("updatedAt", Date())
 tokens.insertOne(dai)
 
 val eggToken = org.bson.Document()
@@ -47,4 +51,6 @@ eggToken.append("name", "Egg Test Token")
 eggToken.append("address", "0xccb006c729d74c5bd87de94955166947cecf9f47")
 eggToken.append("usdPrice", 1.toFloat())
 eggToken.append("tokenVersion", 20)
+eggToken.append("createdAt", Date())
+eggToken.append("updatedAt", Date())
 tokens.insertOne(eggToken)
