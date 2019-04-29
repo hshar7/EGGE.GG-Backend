@@ -25,6 +25,7 @@ data class Tournament (
     @DBRef var game: Game,
     @DBRef val participants: ArrayList<User>,
     @DBRef val matches: org.bson.Document,
+    var featured: Boolean = false,
     @CreatedDate val createdAt: Date,
     @LastModifiedDate var updatedAt: Date
 )
