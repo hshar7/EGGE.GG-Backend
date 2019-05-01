@@ -9,7 +9,7 @@ import java.util.*
 @Document(collection="matches")
 data class Match (
         val id: String,
-        @DBRef val tournament: Tournament,
+        @DBRef(lazy = true) val tournament: AbstractTournament,
         @DBRef var player1: User?,
         @DBRef var player2: User?,
         @DBRef var winner: User?,

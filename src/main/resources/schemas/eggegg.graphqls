@@ -1,0 +1,73 @@
+type Tournament {
+    id: String!
+    tournamentId: Int!
+    deadline: Date!
+    name: String!
+    matches: [Match]
+    description: String!
+    status: String!
+    prize: BigInteger!
+    maxPlayers: Int!
+    participants: [User]
+    token: Token
+    prizeDistribution: [Int]
+    owner: User!
+    game: Game!
+    featured: Boolean!
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+type Game {
+    id: String!
+    url: String!
+    name: String!
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+type Token {
+    id: String!
+    name: String
+    symbol: String
+    address: String
+    usdPrice: Float
+    tokenVersion: Int
+    createdAt: Date
+    updatedAt: Date
+}
+
+type Match {
+    id: String!
+    player1: User
+    player2: User
+    winner: User
+    match1: Match
+    match2: Match
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+type User {
+    id: String!
+    publicAddress: String!
+    name: String
+    email: String
+    organization: String
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+type Query {
+    tournaments(count: Int, offset: Int): [Tournament]!
+    tournament(id: String!): Tournament
+    findTournamentsByGameId(gameId: String): [Tournament]
+}
+
+type Mutation {
+    addParticipant(tournamentId: String, userId: String): Tournament
+    matchWinner(pos: Int, matchId: String): [Match]!
+}
+
+scalar Date
+scalar BigInteger

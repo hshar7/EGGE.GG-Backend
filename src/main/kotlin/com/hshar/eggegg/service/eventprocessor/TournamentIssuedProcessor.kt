@@ -81,7 +81,7 @@ class TournamentIssuedProcessor {
                 prize = 0.toBigInteger(),
                 participants = arrayListOf(),
                 game = game,
-                matches = Document(),
+                matches = arrayListOf(),
                 description = dataObj["description"].asString,
                 name = dataObj["name"].asString,
                 owner = user,

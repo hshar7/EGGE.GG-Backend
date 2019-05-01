@@ -38,10 +38,7 @@ class MatchesController {
         val newMatch = matchRepository.save(match)
 
         val matches = mutableListOf<Match>()
-        newMatch.tournament.matches.forEach {
-            val thisMatch = matchRepository.findById((it.value as DBRef).id.toString())
-                .orElseThrow { ResourceNotFoundException("Match", "id", (it.value as DBRef).id.toString()) }
-
+        newMatch.tournament.matches.forEach {thisMatch ->
             matches.add(thisMatch)
 
             var changed = false

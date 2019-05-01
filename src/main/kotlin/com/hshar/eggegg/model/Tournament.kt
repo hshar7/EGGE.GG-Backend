@@ -8,9 +8,14 @@ import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigInteger
 import java.util.*
 
+interface AbstractTournament {
+    val id: String
+    val matches: ArrayList<Match>
+}
+
 @Document(collection="tournaments")
 data class Tournament (
-    val id: String,
+    override val id: String,
     @Indexed(unique = true) val tournamentId: Int,
     var deadline: Date,
     @DBRef val token: Token,
@@ -24,8 +29,8 @@ data class Tournament (
     var winners: List<String>,
     @DBRef var game: Game,
     @DBRef val participants: ArrayList<User>,
-    @DBRef val matches: org.bson.Document,
+    @DBRef override val matches: ArrayList<Match>,
     var featured: Boolean = false,
     @CreatedDate val createdAt: Date,
     @LastModifiedDate var updatedAt: Date
-)
+) : AbstractTournament
