@@ -31,6 +31,7 @@ data class Tournament (
     @DBRef val participants: ArrayList<User>,
     @DBRef override val matches: ArrayList<Match>,
     var featured: Boolean = false,
+    var coverImage: String = "https://s3.us-east-2.amazonaws.com/eggegg-images/cover.jpg",
     @CreatedDate val createdAt: Date,
     @LastModifiedDate var updatedAt: Date
 ) : AbstractTournament

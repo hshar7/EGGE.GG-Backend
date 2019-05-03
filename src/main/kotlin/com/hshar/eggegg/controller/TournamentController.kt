@@ -1,6 +1,5 @@
 package com.hshar.eggegg.controller
 
-import com.github.salomonbrys.kotson.add
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.set
 import com.hshar.eggegg.exception.ResourceNotFoundException
@@ -13,12 +12,15 @@ import com.hshar.eggegg.repository.UserRepository
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hshar.eggegg.model.Tournament
+import com.hshar.eggegg.service.S3AwsService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.web3j.utils.Convert
 import org.web3j.utils.Convert.fromWei
+import java.io.File
 import java.util.*
 
 @RestController
@@ -36,6 +38,9 @@ class TournamentController {
     @Autowired
     lateinit var gameRepository: GameRepository
 
+    @Autowired
+    lateinit var s3AwsService: S3AwsService
+
     @GetMapping("/tournaments")
     fun getAllTournaments(): ResponseEntity<String> {
         return ResponseEntity(Gson().toJson(tournamentRepository.findAll()), HttpStatus.OK)
@@ -46,6 +51,27 @@ class TournamentController {
         val response = prepTournamentResponse(id)
 
         return ResponseEntity(response.toString(), HttpStatus.OK)
+    }
+
+    @PostMapping("/tournament/{tournamentId}/coverImage")
+    fun uploadFile(
+            @RequestParam("file") file: MultipartFile,
+            @PathVariable tournamentId: String
+    ): ResponseEntity<String> {
+        val fullFileName = "$tournamentId/${file.originalFilename}"
+        val url = "https://s3.us-east-2.amazonaws.com/eggegg-images/$fullFileName"
+
+        val tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow { ResourceNotFoundException("Tournament", "id", tournamentId) }
+
+        when (s3AwsService.putObject(fullFileName, file)) {
+            true -> {
+                tournament.coverImage = url
+                tournamentRepository.save(tournament)
+                return ResponseEntity("{\"fileUrl\": \"$url\"}", HttpStatus.OK)
+            }
+            false -> return ResponseEntity("{\"status\": \"failed\"}", HttpStatus.INTERNAL_SERVER_ERROR)
+        }
     }
 
     @PostMapping("/tournament/{tournamentId}/participant/{userId}")
