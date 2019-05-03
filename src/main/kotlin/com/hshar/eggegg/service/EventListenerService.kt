@@ -149,10 +149,8 @@ class EventListenerService {
 
             tournament.winners = it._winners
             tournament.status = "COMPLETE"
-            if (!tournament.matches.isEmpty()) {
-                val id = tournament.matches[tournament.maxPlayers - 1] as DBRef
-                val match = matchRepository.findById(id.id.toString())
-                        .orElseThrow { ResourceNotFoundException("Match", "id", id.id.toString()) }
+            if (tournament.matches.isNotEmpty()) {
+                val match = tournament.matches.last()
 
                 var address = ""
                 for (d: Address in it._winners as List<Address>) {
