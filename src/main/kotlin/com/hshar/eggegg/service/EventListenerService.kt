@@ -104,7 +104,7 @@ class EventListenerService {
                     ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
                 }
 
-            tournament.prize += it._amount
+            tournament.prize += it._amount.toBigDecimal()
             tournamentRepository.save(tournament)
 
             web3DataRepository.save(Web3Data(id = "ContributionAdded", fromBlock = it.log.blockNumber + 1.toBigInteger()))

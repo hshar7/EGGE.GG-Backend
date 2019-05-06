@@ -78,7 +78,7 @@ class TournamentIssuedProcessor {
                 prizeDistribution = prizeDistInts,
                 winners = emptyList(),
                 token = token,
-                prize = 0.toBigInteger(),
+                prize = 0.toBigDecimal(),
                 participants = arrayListOf(),
                 game = game,
                 matches = arrayListOf(),

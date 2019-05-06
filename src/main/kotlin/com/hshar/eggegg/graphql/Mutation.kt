@@ -76,7 +76,7 @@ class Mutation : GraphQLMutationResolver {
         tournamentRepository.save(tournament)
 
         if (tournament.token.tokenVersion == 0) {
-            tournament.prize = Convert.fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER).toBigInteger()
+            tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
         }
         return tournament
     }

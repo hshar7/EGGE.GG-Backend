@@ -5,6 +5,7 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
 
@@ -22,7 +23,7 @@ data class Tournament (
     var name: String,
     var description: String,
     var status: String = "NEW",
-    var prize: BigInteger,
+    var prize: BigDecimal,
     @DBRef val owner: User,
     val maxPlayers: Int,
     val prizeDistribution: ArrayList<Int>,

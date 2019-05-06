@@ -6,7 +6,7 @@ type Tournament {
     matches: [Match]
     description: String!
     status: String!
-    prize: BigInteger!
+    prize: BigDecimal!
     maxPlayers: Int!
     participants: [User]
     token: Token
@@ -62,7 +62,8 @@ type User {
 type Query {
     tournaments(count: Int, offset: Int): [Tournament]!
     tournament(id: String!): Tournament
-    findTournamentsByGameId(gameId: String): [Tournament]
+    findTournamentsByString(count: Int, offset: Int, fieldName: String, fieldData: String): [Tournament]!
+    findTournamentsByBool(count: Int, offset: Int, fieldName: String, fieldData: Boolean): [Tournament]!
 }
 
 type Mutation {
@@ -71,4 +72,4 @@ type Mutation {
 }
 
 scalar Date
-scalar BigInteger
+scalar BigDecimal

@@ -3,7 +3,6 @@ package com.hshar.eggegg.graphql
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.Tournament
-import com.hshar.eggegg.repository.GameRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
@@ -18,9 +17,6 @@ class Query : GraphQLQueryResolver {
     @Autowired
     lateinit var tournamentRepository: TournamentRepository
 
-    @Autowired
-    lateinit var gameRepository: GameRepository
-
     fun getTournaments(count: Int, offset: Int): Page<Tournament> {
         val sort = Sort(Sort.Direction.DESC, "createdAt")
         return tournamentRepository.findAll(PageRequest.of(offset, count, sort))
@@ -31,17 +27,18 @@ class Query : GraphQLQueryResolver {
             ResourceNotFoundException("Tournament", "id", id)
         }
         if (tournament.token.tokenVersion == 0) {
-            tournament.prize = Convert.fromWei(tournament.prize.toBigDecimal(), Convert.Unit.ETHER).toBigInteger()
+            tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
         }
         return tournament
     }
 
-    fun findTournamentsByGameId(gameId: String): List<Tournament> {
+    fun findTournamentsByString(count: Int, offset: Int, fieldName: String, fieldData: Any): Page<Tournament> {
+        val sort = Sort(Sort.Direction.DESC, "createdAt")
+        return tournamentRepository.findByField(fieldName, fieldData, PageRequest.of(offset, count, sort))
+    }
 
-        val game = gameRepository.findById(gameId).orElseThrow{
-            ResourceNotFoundException("Game", "id", gameId)
-        }
-
-        return tournamentRepository.findByGame(game)
+    fun findTournamentsByBool(count: Int, offset: Int, fieldName: String, fieldData: Any): Page<Tournament> {
+        val sort = Sort(Sort.Direction.DESC, "createdAt")
+        return tournamentRepository.findByField(fieldName, fieldData, PageRequest.of(offset, count, sort))
     }
 }
