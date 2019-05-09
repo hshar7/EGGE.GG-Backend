@@ -7,7 +7,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hshar.eggegg.model.User
 import com.hshar.eggegg.payload.JwtAuthenticationResponse
+import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider
+import com.hshar.eggegg.security.UserPrincipal
 import org.apache.commons.codec.binary.Hex
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -65,6 +67,15 @@ class UserController {
         jwtResponse.publicAddress = user.publicAddress
         jwtResponse.userName = user.name
         return ResponseEntity.ok(jwtResponse)
+    }
+
+    @GetMapping("/user/me")
+    fun getMyInformation(@CurrentUser currentUser: UserPrincipal): ResponseEntity<User> {
+        val user = userRepository.findById(currentUser.id)
+        when (user.isPresent) {
+            true -> return ResponseEntity(user.get(), HttpStatus.OK)
+            false -> return ResponseEntity(HttpStatus.NOT_FOUND)
+        }
     }
 
     @PostMapping("/user/{id}/metadata")

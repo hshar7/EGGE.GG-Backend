@@ -18,7 +18,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.password.PasswordEncoder
 
-inline class NoPasswordEnconder(val password: String) : PasswordEncoder {
+inline class NoPasswordEncoder(val password: String) : PasswordEncoder {
     override fun encode(charSequence: CharSequence): String {
         return charSequence.toString()
     }
@@ -58,7 +58,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
-        return NoPasswordEnconder("")
+        return NoPasswordEncoder("")
     }
 
     override fun configure(http: HttpSecurity) {
@@ -76,7 +76,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                 .antMatchers("/")
                 .permitAll()
-                .antMatchers("/api/auth/**")
+                .antMatchers(HttpMethod.POST, "/graphql")
                 .permitAll()
                 .antMatchers(HttpMethod.POST, "/api/user")
                 .permitAll()
