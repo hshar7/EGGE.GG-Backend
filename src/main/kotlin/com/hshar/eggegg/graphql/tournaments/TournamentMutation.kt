@@ -1,4 +1,4 @@
-package com.hshar.eggegg.graphql
+package com.hshar.eggegg.graphql.tournaments
 
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
@@ -14,7 +14,7 @@ import org.web3j.utils.Convert
 import java.util.*
 
 @Service
-class Mutation : GraphQLMutationResolver {
+class TournamentMutation : GraphQLMutationResolver {
 
     @Autowired
     lateinit var tournamentRepository: TournamentRepository

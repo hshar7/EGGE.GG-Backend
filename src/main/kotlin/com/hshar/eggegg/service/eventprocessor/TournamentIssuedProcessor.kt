@@ -41,14 +41,13 @@ class TournamentIssuedProcessor {
     lateinit var notificationService: NotificationService
 
     fun process(eventData: Tournaments.TournamentIssuedEventResponse) {
-        val user = userRepository.findByPublicAddress(eventData._organizer).orElseGet {
-            userRepository.insert(User(
-                    id = UUID.randomUUID().toString(),
-                    publicAddress = eventData._organizer,
-                    createdAt = Date(),
-                    updatedAt = Date()
-            ))
-        }
+        val user = userRepository.findByPublicAddress(eventData._organizer) ?: userRepository.insert(User(
+            id = UUID.randomUUID().toString(),
+            publicAddress = eventData._organizer,
+            organization = null,
+            createdAt = Date(),
+            updatedAt = Date()
+        ))
         val request = Request.Builder().url("https://ipfs.infura.io:5001/api/v0/cat?arg=${eventData._data}").build()
         val data = OkHttpClient().newCall(request).execute().body()!!.string()
         val dataObj = Gson().fromJson<JsonObject>(data) // TODO: Create own data object
@@ -92,11 +91,11 @@ class TournamentIssuedProcessor {
         tournamentRepository.insert(tournament)
 
         notificationService.newNotification(Notification(
-            id = UUID.randomUUID().toString(),
-            user = user,
-            url = "/tournament/${tournament.id}",
-            message = "${tournament.name} Created!",
-            createdAt = Date()
+                id = UUID.randomUUID().toString(),
+                user = user,
+                url = "/tournament/${tournament.id}",
+                message = "${tournament.name} Created!",
+                createdAt = Date()
         ))
     }
 }

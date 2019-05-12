@@ -1,0 +1,28 @@
+type Organization {
+    id: String!
+    name: String!
+    owners: [User]
+    description: String!
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+type AbstractOrganization {
+    id: String!
+    name: String!
+}
+
+extend type Query {
+    organization(id: String): Organization
+}
+
+extend type Mutation {
+    createOrganization(organization: OrganizationInput): Organization
+    updateOrganization(organization: OrganizationInput): Organization
+}
+
+input OrganizationInput {
+    id: String
+    name: String
+    description: String
+}

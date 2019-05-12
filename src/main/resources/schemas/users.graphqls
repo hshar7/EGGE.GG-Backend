@@ -1,0 +1,15 @@
+type User {
+    id: String!
+    publicAddress: String!
+    name: String
+    email: String
+    organization: AbstractOrganization
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+extend type Query {
+    user(id: String): User
+    myProfile: User
+    usersByOrganization(organizationId: String): [User]
+}

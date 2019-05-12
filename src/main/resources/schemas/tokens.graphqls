@@ -1,0 +1,10 @@
+type Token {
+    id: String!
+    name: String
+    symbol: String
+    address: String
+    usdPrice: Float
+    tokenVersion: Int
+    createdAt: Date
+    updatedAt: Date
+}

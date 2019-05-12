@@ -1,9 +1,10 @@
-package com.hshar.eggegg.graphql
+package com.hshar.eggegg.graphql.tournaments
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.Tournament
 import com.hshar.eggegg.repository.TournamentRepository
+import findOne
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
 
 @Service
-class Query : GraphQLQueryResolver {
+class TournamentQuery : GraphQLQueryResolver {
 
     @Autowired
     lateinit var tournamentRepository: TournamentRepository
@@ -23,9 +24,7 @@ class Query : GraphQLQueryResolver {
     }
 
     fun getTournament(id: String): Tournament {
-        val tournament = tournamentRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Tournament", "id", id)
-        }
+        val tournament = tournamentRepository.findOne(id) ?: throw ResourceNotFoundException("Tournament", "id", id)
         if (tournament.token.tokenVersion == 0) {
             tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
         }

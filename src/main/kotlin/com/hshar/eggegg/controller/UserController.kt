@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hshar.eggegg.model.User
 import com.hshar.eggegg.payload.JwtAuthenticationResponse
+import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider
 import com.hshar.eggegg.security.UserPrincipal
@@ -34,6 +35,9 @@ class UserController {
     lateinit var userRepository: UserRepository
 
     @Autowired
+    lateinit var organizationRepository: OrganizationRepository
+
+    @Autowired
     lateinit var authenticationManager: AuthenticationManager
 
     @Autowired
@@ -42,18 +46,17 @@ class UserController {
     @PostMapping("/user")
     fun createOrLoginUser(@RequestBody requestBody: String): ResponseEntity<JwtAuthenticationResponse> {
         val signUpRequest = Gson().fromJson<JsonObject>(requestBody)
-        if (!verifyAddressFromSignature(signUpRequest["accountAddress"].asString, signUpRequest["signature"].asString)){
+        if (!verifyAddressFromSignature(signUpRequest["accountAddress"].asString, signUpRequest["signature"].asString)) {
             return ResponseEntity(HttpStatus.UNAUTHORIZED)
         }
         val user = userRepository.findByPublicAddress(signUpRequest["accountAddress"].asString)
-            .orElseGet {
-                userRepository.insert(User(
-                    id = UUID.randomUUID().toString(),
-                    publicAddress = signUpRequest["accountAddress"].asString,
-                    createdAt = Date(),
-                    updatedAt = Date()
+                ?: userRepository.insert(User(
+                        id = UUID.randomUUID().toString(),
+                        publicAddress = signUpRequest["accountAddress"].asString,
+                        organization = null,
+                        createdAt = Date(),
+                        updatedAt = Date()
                 ))
-            }
 
         val authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(
@@ -83,7 +86,7 @@ class UserController {
         val editRequest = Gson().fromJson<JsonObject>(requestBody)
 
         val user = userRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("User", "id", id) }
+                .orElseThrow { ResourceNotFoundException("User", "id", id) }
 
         if (editRequest["name"] != null) {
             user.name = editRequest["name"].asString
@@ -91,8 +94,12 @@ class UserController {
         if (editRequest["email"] != null) {
             user.email = editRequest["email"].asString
         }
-        if (editRequest["organization"] != null) {
-            user.organization = editRequest["organization"].asString
+        if (editRequest["organizationId"] != null) {
+            val org = organizationRepository.findById(editRequest["organizationId"].asString)
+                    .orElseThrow {
+                        ResourceNotFoundException("Organization", "id", editRequest["organizationId"].asString)
+                    }
+            user.organization = org
         }
 
         return ResponseEntity(Gson().toJson(userRepository.save(user)), HttpStatus.OK)

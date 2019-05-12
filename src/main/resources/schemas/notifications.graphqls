@@ -1,0 +1,12 @@
+type Notification {
+    id: String!
+    createdAt: Date!
+    user: User!
+    message: String!
+    url: String!
+}
+
+extend type Query {
+    notification(id: String): Notification
+    notifications(count: Int, offset: Int, userId: String): [Notification]
+}
