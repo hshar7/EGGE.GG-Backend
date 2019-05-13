@@ -11,6 +11,8 @@ import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider
 import com.hshar.eggegg.security.UserPrincipal
+import com.hshar.eggegg.service.S3AwsService
+import findOne
 import org.apache.commons.codec.binary.Hex
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -20,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Hash
 import org.web3j.crypto.Sign
@@ -42,6 +45,9 @@ class UserController {
 
     @Autowired
     lateinit var jwtTokenProvider: JwtTokenProvider
+
+    @Autowired
+    lateinit var s3AwsService: S3AwsService
 
     @PostMapping("/user")
     fun createOrLoginUser(@RequestBody requestBody: String): ResponseEntity<JwtAuthenticationResponse> {
@@ -69,15 +75,28 @@ class UserController {
         jwtResponse.userId = user.id
         jwtResponse.publicAddress = user.publicAddress
         jwtResponse.userName = user.name
+        jwtResponse.userAvatar = user.avatar
         return ResponseEntity.ok(jwtResponse)
     }
 
-    @GetMapping("/user/me")
-    fun getMyInformation(@CurrentUser currentUser: UserPrincipal): ResponseEntity<User> {
-        val user = userRepository.findById(currentUser.id)
-        when (user.isPresent) {
-            true -> return ResponseEntity(user.get(), HttpStatus.OK)
-            false -> return ResponseEntity(HttpStatus.NOT_FOUND)
+    @PostMapping("/user/myAvatar")
+    fun changeMyAvatar(
+            @RequestParam("file") file: MultipartFile,
+            @CurrentUser userPrincipal: UserPrincipal
+    ): ResponseEntity<String> {
+        val user = userRepository.findOne(userPrincipal.id)
+                ?: throw ResourceNotFoundException("User", "id", userPrincipal.id)
+
+        val fullFileName = "users/${userPrincipal.id}/${file.originalFilename}"
+        val url = "https://s3.us-east-2.amazonaws.com/eggegg-images/$fullFileName"
+
+        when (s3AwsService.putObject(fullFileName, file)) {
+            true -> {
+                user.avatar = url
+                userRepository.save(user)
+                return ResponseEntity("{\"fileUrl\": \"$url\"}", HttpStatus.OK)
+            }
+            false -> return ResponseEntity("{\"status\": \"failed\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 

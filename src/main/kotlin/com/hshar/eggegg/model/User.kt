@@ -16,6 +16,7 @@ data class User(
         var email: String = "",
         var summary: String = "",
         @DBRef(lazy = true) var organization: AbstractOrganization?,
+        var avatar: String = "https://s3.us-east-2.amazonaws.com/eggegg-images/egg.png",
         @CreatedDate val createdAt: Date,
         @LastModifiedDate var updatedAt: Date
 )

@@ -4,6 +4,7 @@ type User {
     name: String
     email: String
     organization: AbstractOrganization
+    avatar: String!
     createdAt: Date!
     updatedAt: Date!
 }

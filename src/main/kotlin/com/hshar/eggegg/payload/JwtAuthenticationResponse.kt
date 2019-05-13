@@ -5,5 +5,6 @@ data class JwtAuthenticationResponse (
     var tokenType: String = "Bearer",
     var userName: String = "",
     var publicAddress: String = "",
+    var userAvatar: String = "",
     var userId: String = ""
 )
