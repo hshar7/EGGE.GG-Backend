@@ -115,7 +115,10 @@ class TournamentIssuedProcessor : FlowableSubscriber<Tournaments.TournamentIssue
             ))
 
             this.proceedBlock(eventData.log.blockNumber)
-        } catch (t: Throwable) {
+        } catch (t: Exception) {
+            logger.info("Retrying...")
+            this.onNext(eventData)
+        } catch (t: Error) {
             logger.error(t.localizedMessage)
             this.proceedBlock(eventData.log.blockNumber)
         }
