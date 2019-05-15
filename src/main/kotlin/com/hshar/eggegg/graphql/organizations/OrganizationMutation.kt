@@ -2,11 +2,10 @@ package com.hshar.eggegg.graphql.organizations
 
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Organization
-import com.hshar.eggegg.model.User
+import com.hshar.eggegg.model.permanent.Organization
+import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.repository.UserRepository
-import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.UserPrincipal
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder

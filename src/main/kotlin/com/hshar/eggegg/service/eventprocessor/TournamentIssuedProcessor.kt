@@ -2,28 +2,33 @@ package com.hshar.eggegg.service.eventprocessor
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Game
-import com.hshar.eggegg.model.Notification
-import com.hshar.eggegg.model.Tournament
-import com.hshar.eggegg.model.User
-import com.hshar.eggegg.repository.GameRepository
-import com.hshar.eggegg.repository.TokenRepository
-import com.hshar.eggegg.repository.TournamentRepository
-import com.hshar.eggegg.repository.UserRepository
+import com.hshar.eggegg.model.permanent.Notification
+import com.hshar.eggegg.model.permanent.Tournament
+import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.Web3Data
+import com.hshar.eggegg.model.transient.payload.IpfsSchema
+import com.hshar.eggegg.model.transient.type.TournamentStatus
+import com.hshar.eggegg.repository.*
 import com.hshar.eggegg.service.NotificationService
+import findOne
+import io.reactivex.Flowable
+import io.reactivex.FlowableSubscriber
+import io.reactivex.internal.operators.flowable.FlowableError
+import mu.KotlinLogging
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.bson.Document
+import org.reactivestreams.Subscription
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.web3j.abi.datatypes.generated.Uint256
+import reactor.core.Exceptions
+import java.math.BigInteger
 import java.util.*
 
 @Service
-class TournamentIssuedProcessor {
+class TournamentIssuedProcessor : FlowableSubscriber<Tournaments.TournamentIssuedEventResponse> {
 
     @Autowired
     lateinit var userRepository: UserRepository
@@ -40,62 +45,93 @@ class TournamentIssuedProcessor {
     @Autowired
     lateinit var notificationService: NotificationService
 
-    fun process(eventData: Tournaments.TournamentIssuedEventResponse) {
-        val user = userRepository.findByPublicAddress(eventData._organizer) ?: userRepository.insert(User(
-            id = UUID.randomUUID().toString(),
-            publicAddress = eventData._organizer,
-            organization = null,
-            createdAt = Date(),
-            updatedAt = Date()
-        ))
-        val request = Request.Builder().url("https://ipfs.infura.io:5001/api/v0/cat?arg=${eventData._data}").build()
-        val data = OkHttpClient().newCall(request).execute().body()!!.string()
-        val dataObj = Gson().fromJson<JsonObject>(data) // TODO: Create own data object
+    private val logger = KotlinLogging.logger {}
 
-        val game = gameRepository.findByName(dataObj["game"].asString).orElseGet {
-            gameRepository.insert(Game(
+    @Autowired
+    lateinit var web3DataRepository: Web3DataRepository
+
+    override fun onSubscribe(subscription: Subscription) {
+        logger.info("Subscribed to TournamentIssuedEvent.")
+        subscription.request(Long.MAX_VALUE)
+    }
+
+    override fun onNext(eventData: Tournaments.TournamentIssuedEventResponse) {
+        try {
+            logger.info("Tournament ${eventData._tournamentId} create by ${eventData._organizer}.")
+
+            val user = userRepository.findByPublicAddress(eventData._organizer) ?: userRepository.insert(User(
                     id = UUID.randomUUID().toString(),
-                    name = dataObj["game"].asString,
+                    publicAddress = eventData._organizer,
+                    organization = null,
                     createdAt = Date(),
                     updatedAt = Date()
             ))
+            val request = Request.Builder().url("https://ipfs.infura.io:5001/api/v0/cat?arg=${eventData._data}").build()
+            val data = OkHttpClient().newCall(request).execute().body()!!.string()
+            val dataObj = Gson().fromJson<IpfsSchema>(data)
+
+            val game = gameRepository.findOne(dataObj.gameId)
+                    ?: throw ResourceNotFoundException("Game", "id", dataObj.gameId)
+
+            val token = tokenRepository.findByAddress(eventData._token)
+                    ?: throw ResourceNotFoundException("Token", "address", eventData._token)
+
+            val prizeDistInts: ArrayList<Int> = arrayListOf()
+            for (d: Uint256 in eventData._prizeDistribution as List<Uint256>) {
+                prizeDistInts.add(d.value.toInt())
+            }
+
+            val tournament = Tournament(
+                    id = UUID.randomUUID().toString(),
+                    tournamentId = eventData._tournamentId.toInt(),
+                    tournamentType = dataObj.tournamentType,
+                    bracketType = dataObj.bracketType,
+                    tournamentStatus = TournamentStatus.NEW,
+                    tournamentFormat = dataObj.tournamentFormat,
+                    deadline = Date(eventData._deadline.toLong()),
+                    maxPlayers = eventData._maxPlayers.toInt(),
+                    prizeDistribution = prizeDistInts,
+                    winners = emptyList(),
+                    token = token,
+                    prize = 0.toBigDecimal(),
+                    participants = arrayListOf(),
+                    game = game,
+                    matches = arrayListOf(),
+                    description = dataObj.description,
+                    name = dataObj.name,
+                    owner = user,
+                    createdAt = Date(),
+                    updatedAt = Date()
+            )
+
+            tournamentRepository.insert(tournament)
+
+            notificationService.newNotification(Notification(
+                    id = UUID.randomUUID().toString(),
+                    user = user,
+                    url = "/tournament/${tournament.id}",
+                    message = "${tournament.name} Created!",
+                    createdAt = Date()
+            ))
+
+            this.proceedBlock(eventData.log.blockNumber)
+        } catch (t: Throwable) {
+            logger.error(t.localizedMessage)
+            this.proceedBlock(eventData.log.blockNumber)
         }
+    }
 
-        val token = tokenRepository.findByAddress(eventData._token)
-                .orElseThrow { ResourceNotFoundException("Token", "address", eventData._token) }
+    override fun onComplete() {
+        logger.info("Complete TournamentIssuedEvent.")
+    }
 
-        val prizeDistInts: ArrayList<Int> = arrayListOf()
-        for (d: Uint256 in eventData._prizeDistribution as List<Uint256>) {
-            prizeDistInts.add(d.value.toInt())
-        }
+    override fun onError(exception: Throwable) {
+        logger.error(exception.localizedMessage)
+    }
 
-        val tournament = Tournament(
-                id = UUID.randomUUID().toString(),
-                tournamentId = eventData._tournamentId.toInt(),
-                deadline = Date(eventData._deadline.toLong()),
-                maxPlayers = eventData._maxPlayers.toInt(),
-                prizeDistribution = prizeDistInts,
-                winners = emptyList(),
-                token = token,
-                prize = 0.toBigDecimal(),
-                participants = arrayListOf(),
-                game = game,
-                matches = arrayListOf(),
-                description = dataObj["description"].asString,
-                name = dataObj["name"].asString,
-                owner = user,
-                createdAt = Date(),
-                updatedAt = Date()
+    private fun proceedBlock(blockNumber: BigInteger) {
+        web3DataRepository.save(
+                Web3Data(id = "TournamentIssued", fromBlock = blockNumber + 1.toBigInteger())
         )
-
-        tournamentRepository.insert(tournament)
-
-        notificationService.newNotification(Notification(
-                id = UUID.randomUUID().toString(),
-                user = user,
-                url = "/tournament/${tournament.id}",
-                message = "${tournament.name} Created!",
-                createdAt = Date()
-        ))
     }
 }

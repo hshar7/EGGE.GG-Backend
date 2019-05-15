@@ -1,7 +1,7 @@
 package com.hshar.eggegg.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.hshar.eggegg.model.User;
+import com.hshar.eggegg.model.permanent.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package com.hshar.eggegg.repository
 
-import com.hshar.eggegg.model.Game
+import com.hshar.eggegg.model.permanent.Game
 import org.springframework.data.mongodb.repository.MongoRepository
 import java.util.*
 

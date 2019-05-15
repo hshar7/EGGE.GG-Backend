@@ -5,3 +5,8 @@ type Game {
     createdAt: Date!
     updatedAt: Date!
 }
+
+extend type Query {
+    games(count: Int, offset: Int): [Game]
+    game(id: String!): Game
+}

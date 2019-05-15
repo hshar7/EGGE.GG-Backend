@@ -3,7 +3,7 @@ pragma solidity 0.5.7;
 import "./inherited/ERC20Token.sol";
 import "./inherited/ERC721Basic.sol";
 
-// Contract: 0x389cbba120b927c8d1ff1890efd68dcbde5c0929
+// Contract: 0xf09362eb76f310170a3874b6e16b416ddf28a7ed
 
 contract Tournaments {
 

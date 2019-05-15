@@ -1,7 +1,7 @@
 package com.hshar.eggegg.repository
 
-import com.hshar.eggegg.model.Organization
-import com.hshar.eggegg.model.User
+import com.hshar.eggegg.model.permanent.Organization
+import com.hshar.eggegg.model.permanent.User
 import org.springframework.data.mongodb.repository.MongoRepository
 
 interface UserRepository : MongoRepository<User, String> {

@@ -2,9 +2,9 @@ package com.hshar.eggegg.graphql.tournaments
 
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Match
-import com.hshar.eggegg.model.Tournament
-import com.hshar.eggegg.model.User
+import com.hshar.eggegg.model.permanent.Match
+import com.hshar.eggegg.model.permanent.Tournament
+import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
@@ -57,15 +57,15 @@ class TournamentMutation : GraphQLMutationResolver {
                 }
 
                 val match = Match(
-                    id = UUID.randomUUID().toString(),
-                    tournament = tournament,
-                    player1 = player1,
-                    player2 = player2,
-                    winner = null,
-                    match1 = match1,
-                    match2 = match2,
-                    createdAt = Date(),
-                    updatedAt = Date()
+                        id = UUID.randomUUID().toString(),
+                        tournament = tournament,
+                        player1 = player1,
+                        player2 = player2,
+                        winner = null,
+                        match1 = match1,
+                        match2 = match2,
+                        createdAt = Date(),
+                        updatedAt = Date()
                 )
 
                 matchesQueue.add(match)

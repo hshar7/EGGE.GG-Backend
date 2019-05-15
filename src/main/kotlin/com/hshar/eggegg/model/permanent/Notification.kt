@@ -1,4 +1,4 @@
-package com.hshar.eggegg.model
+package com.hshar.eggegg.model.permanent
 
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.mongodb.core.mapping.DBRef

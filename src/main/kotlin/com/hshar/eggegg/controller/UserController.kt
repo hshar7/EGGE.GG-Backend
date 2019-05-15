@@ -5,8 +5,8 @@ import com.hshar.eggegg.repository.UserRepository
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.hshar.eggegg.model.User
-import com.hshar.eggegg.payload.JwtAuthenticationResponse
+import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.transient.payload.JwtAuthenticationResponse
 import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider
@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.web3j.crypto.Keys

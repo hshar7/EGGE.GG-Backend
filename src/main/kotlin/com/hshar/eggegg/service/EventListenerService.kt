@@ -11,10 +11,12 @@ import org.web3j.tx.ReadonlyTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import java.util.*
 import com.hshar.eggegg.contract.Tournaments
-import com.hshar.eggegg.model.*
+import com.hshar.eggegg.model.permanent.Tournament
+import com.hshar.eggegg.model.permanent.Web3Data
+import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.repository.*
 import com.hshar.eggegg.service.eventprocessor.TournamentIssuedProcessor
-import com.mongodb.DBRef
+import findOne
 import org.web3j.abi.datatypes.Address
 
 @Service
@@ -30,13 +32,13 @@ class EventListenerService {
     lateinit var matchRepository: MatchRepository
 
     @Autowired
-    lateinit var tournamentIssuedProcessor: TournamentIssuedProcessor
-
-    @Autowired
     lateinit var web3DataRepository: Web3DataRepository
 
+    @Autowired
+    lateinit var tournamentIssuedProcessor: TournamentIssuedProcessor
+
     companion object {
-        const val CONTRACT_ADDRESS = "0x389cbba120b927c8d1ff1890efd68dcbde5c0929"
+        const val CONTRACT_ADDRESS = "0xf09362eb76f310170a3874b6e16b416ddf28a7ed"
         const val GAS_PRICE = 200
         const val GAS_LIMIT = 4500000
     }
@@ -52,10 +54,10 @@ class EventListenerService {
         val gasProvider = StaticGasProvider(GAS_PRICE.toBigInteger(), GAS_LIMIT.toBigInteger())
 
         val tournamentsContract = Tournaments.load(
-            CONTRACT_ADDRESS,
-            web3j,
-            transactionManager,
-            gasProvider
+                CONTRACT_ADDRESS,
+                web3j,
+                transactionManager,
+                gasProvider
         )
 
         tournamentIssuedEvent(tournamentsContract)
@@ -64,27 +66,13 @@ class EventListenerService {
         tournamentFinalizedEvent(tournamentsContract)
     }
 
-    private fun tournamentDeadlineChangedEvent(tournamentsContract: Tournaments) {
-        var fromBlockTournamentDeadlineChanged = 0.toBigInteger()
-        web3DataRepository.findById("ContributionAdded").ifPresent {
-            fromBlockTournamentDeadlineChanged = it.fromBlock
-        }
+    private fun tournamentIssuedEvent(tournamentsContract: Tournaments) {
+        val fromBlock = web3DataRepository.findOne("TournamentIssued")?.fromBlock ?: 0.toBigInteger()
 
-        tournamentsContract.tournamentDeadlineChangedEventFlowable(
-            DefaultBlockParameter.valueOf(fromBlockTournamentDeadlineChanged),
-            DefaultBlockParameterName.LATEST).subscribe {
-
-            println("Tournament ${it._tournamentId} deadline changed by ${it._changer} to ${it._deadline}.")
-
-            val tournament = tournamentRepository.findByTournamentId(it._tournamentId.toInt())
-                .orElseThrow {
-                    ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
-                }
-
-            tournament.deadline = Date(it._deadline.toLong())
-
-            web3DataRepository.save(Web3Data(id = "TournamentDeadlineChanged", fromBlock = it.log.blockNumber + 1.toBigInteger()))
-        }
+        tournamentsContract.tournamentIssuedEventFlowable(
+                DefaultBlockParameter.valueOf(fromBlock),
+                DefaultBlockParameterName.LATEST
+        ).subscribeWith(this.tournamentIssuedProcessor)
     }
 
     private fun contributionAddedEvent(tournamentsContract: Tournaments) {
@@ -94,15 +82,15 @@ class EventListenerService {
         }
 
         tournamentsContract.contributionAddedEventFlowable(
-            DefaultBlockParameter.valueOf(fromBlockContributionAdded),
-            DefaultBlockParameterName.LATEST).subscribe {
+                DefaultBlockParameter.valueOf(fromBlockContributionAdded),
+                DefaultBlockParameterName.LATEST).subscribe {
 
-            println("Tournament ${it._tournamentId} funded by ${it._contributor} for amount ${it._amount}.")
+            println("Tournament ${it._tournamentId} fund by ${it._contributor} for amount ${it._amount}.")
 
             val tournament = tournamentRepository.findByTournamentId(it._tournamentId.toInt())
-                .orElseThrow {
-                    ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
-                }
+                    .orElseThrow {
+                        ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
+                    }
 
             tournament.prize += it._amount.toBigDecimal()
             tournamentRepository.save(tournament)
@@ -111,21 +99,26 @@ class EventListenerService {
         }
     }
 
-    private fun tournamentIssuedEvent(tournamentsContract: Tournaments) {
-
-        var fromBlockTournamentIssued = 0.toBigInteger()
-        web3DataRepository.findById("TournamentIssued").ifPresent {
-            fromBlockTournamentIssued = it.fromBlock
+    private fun tournamentDeadlineChangedEvent(tournamentsContract: Tournaments) {
+        var fromBlockTournamentDeadlineChanged = 0.toBigInteger()
+        web3DataRepository.findById("ContributionAdded").ifPresent {
+            fromBlockTournamentDeadlineChanged = it.fromBlock
         }
 
-        tournamentsContract.tournamentIssuedEventFlowable(
-            DefaultBlockParameter.valueOf(fromBlockTournamentIssued),
-            DefaultBlockParameterName.LATEST).subscribe{
+        tournamentsContract.tournamentDeadlineChangedEventFlowable(
+                DefaultBlockParameter.valueOf(fromBlockTournamentDeadlineChanged),
+                DefaultBlockParameterName.LATEST).subscribe {
 
-            println("Tournament ${it._tournamentId} create by ${it._organizer}.")
+            println("Tournament ${it._tournamentId} deadline change by ${it._changer} to ${it._deadline}.")
 
-            tournamentIssuedProcessor.process(it)
-            web3DataRepository.save(Web3Data(id = "TournamentIssued", fromBlock = it.log.blockNumber + 1.toBigInteger()))
+            val tournament = tournamentRepository.findByTournamentId(it._tournamentId.toInt())
+                    .orElseThrow {
+                        ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
+                    }
+
+            tournament.deadline = Date(it._deadline.toLong())
+
+            web3DataRepository.save(Web3Data(id = "TournamentDeadlineChanged", fromBlock = it.log.blockNumber + 1.toBigInteger()))
         }
     }
 
@@ -137,18 +130,18 @@ class EventListenerService {
         }
 
         tournamentsContract.tournamentFinalizedEventFlowable(
-            DefaultBlockParameter.valueOf(fromBlock),
-            DefaultBlockParameterName.LATEST).subscribe {
+                DefaultBlockParameter.valueOf(fromBlock),
+                DefaultBlockParameterName.LATEST).subscribe {
 
-            println("Tournament ${it._tournamentId} finalized.")
+            println("Tournament ${it._tournamentId} finalized event.")
 
             val tournament = tournamentRepository.findByTournamentId(it._tournamentId.toInt())
-                .orElseThrow {
-                    ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
-                }
+                    .orElseThrow {
+                        ResourceNotFoundException(Tournament::class.simpleName.toString(), "tournamentId", it._tournamentId)
+                    }
 
             tournament.winners = it._winners
-            tournament.status = "COMPLETE"
+            tournament.tournamentStatus = TournamentStatus.FINISHED
             if (tournament.matches.isNotEmpty()) {
                 val match = tournament.matches.last()
 
@@ -168,7 +161,7 @@ class EventListenerService {
             tournamentRepository.save(tournament)
 
             web3DataRepository.save(
-                Web3Data(id = "TournamentFinalized", fromBlock = it.log.blockNumber + 1.toBigInteger())
+                    Web3Data(id = "TournamentFinalized", fromBlock = it.log.blockNumber + 1.toBigInteger())
             )
         }
     }

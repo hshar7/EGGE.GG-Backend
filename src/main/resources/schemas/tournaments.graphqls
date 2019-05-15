@@ -1,11 +1,37 @@
+enum TournamentType {
+    PRIZE_POOL,
+    BUY_IN,
+    OFF_CHAIN
+}
+
+enum TournamentStatus {
+    NEW,
+    LIVE,
+    FINISHED
+}
+
+enum BracketType {
+    SINGLE_ELIMINATION,
+    DOUBLE_ELIMINATION,
+    ROUND_ROBIN
+}
+
+enum TournamentFormat {
+    SINGLES,
+    TEAMS
+}
+
 type Tournament {
     id: String!
     tournamentId: Int!
+    tournamentType: TournamentType!
+    tournamentFormat: TournamentFormat!
+    tournamentStatus: TournamentStatus!
+    bracketType: BracketType!
     deadline: Date!
     name: String!
     matches: [Match]
     description: String!
-    status: String!
     prize: BigDecimal!
     maxPlayers: Int!
     participants: [User]

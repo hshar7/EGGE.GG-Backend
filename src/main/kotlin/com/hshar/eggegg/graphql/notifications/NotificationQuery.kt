@@ -2,7 +2,7 @@ package com.hshar.eggegg.graphql.notifications
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Notification
+import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.repository.NotificationRepository
 import findOne
 import org.springframework.beans.factory.annotation.Autowired

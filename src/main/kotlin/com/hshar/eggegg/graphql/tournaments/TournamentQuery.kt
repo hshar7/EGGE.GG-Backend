@@ -2,7 +2,7 @@ package com.hshar.eggegg.graphql.tournaments
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.Tournament
+import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.repository.TournamentRepository
 import findOne
 import org.springframework.beans.factory.annotation.Autowired

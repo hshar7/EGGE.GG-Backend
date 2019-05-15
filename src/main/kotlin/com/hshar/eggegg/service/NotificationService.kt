@@ -1,6 +1,6 @@
 package com.hshar.eggegg.service
 
-import com.hshar.eggegg.model.Notification
+import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.repository.NotificationRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
