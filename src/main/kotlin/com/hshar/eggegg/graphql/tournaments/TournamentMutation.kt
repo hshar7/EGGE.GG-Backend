@@ -5,9 +5,12 @@ import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Match
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.transient.type.TournamentType
+import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
@@ -25,9 +28,16 @@ class TournamentMutation : GraphQLMutationResolver {
     @Autowired
     lateinit var matchRepository: MatchRepository
 
+    private val logger = KotlinLogging.logger {}
+
     fun addParticipant(tournamentId: String, userId: String): Tournament {
-        val tournament = tournamentRepository.findById(tournamentId)
+        var tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow { ResourceNotFoundException("Tournament", "id", tournamentId) }
+
+        when (tournament.tournamentType) {
+            TournamentType.PRIZE_POOL, TournamentType.OFF_CHAIN -> logger.info("Adding user")
+            else -> throw Exception("Cannot add a participant offchain to this Tournament ${tournament.id}.")
+        }
 
         val user = userRepository.findById(userId)
                 .orElseThrow { ResourceNotFoundException("User", "id", userId) }
@@ -35,43 +45,8 @@ class TournamentMutation : GraphQLMutationResolver {
         tournament.participants.add(user)
 
         if (tournament.participants.size == tournament.maxPlayers) {
-            val matchesQueue: Queue<Match> = ArrayDeque<Match>()
-            val participants = tournament.participants.toMutableList()
-
-            for (i in 1..tournament.maxPlayers - 1) {
-
-                var match1: Match? = null
-                var match2: Match? = null
-                var player1: User? = null
-                var player2: User? = null
-
-                if (i <= tournament.maxPlayers / 2) {
-                    player1 = participants[(0..participants.size - 1).random()]
-                    participants.remove(player1)
-                    player2 = participants[(0..participants.size - 1).random()]
-                    participants.remove(player2)
-
-                } else {
-                    match1 = matchesQueue.remove()
-                    match2 = matchesQueue.remove()
-                }
-
-                val match = Match(
-                        id = UUID.randomUUID().toString(),
-                        tournament = tournament,
-                        player1 = player1,
-                        player2 = player2,
-                        winner = null,
-                        match1 = match1,
-                        match2 = match2,
-                        createdAt = Date(),
-                        updatedAt = Date()
-                )
-
-                matchesQueue.add(match)
-                tournament.matches.add(matchRepository.insert(match))
-            }
-        } else if (tournament.participants.size > tournament.maxPlayers) { /* No save */ }
+            tournament = TournamentOperations.generateBracket(tournament, matchRepository)
+        } else if (tournament.participants.size > tournament.maxPlayers) { return tournament }
 
         tournamentRepository.save(tournament)
 

@@ -1,4 +1,4 @@
-package com.hshar.eggegg.service.eventprocessor
+package com.hshar.eggegg.service.eventsubscriber
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
@@ -7,28 +7,22 @@ import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
-import com.hshar.eggegg.model.permanent.Web3Data
 import com.hshar.eggegg.model.transient.payload.IpfsSchema
 import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.repository.*
 import com.hshar.eggegg.service.NotificationService
 import findOne
-import io.reactivex.Flowable
-import io.reactivex.FlowableSubscriber
-import io.reactivex.internal.operators.flowable.FlowableError
-import mu.KotlinLogging
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.reactivestreams.Subscription
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.web3j.abi.datatypes.generated.Uint256
-import reactor.core.Exceptions
-import java.math.BigInteger
 import java.util.*
 
 @Service
-class TournamentIssuedProcessor : FlowableSubscriber<Tournaments.TournamentIssuedEventResponse> {
+class TournamentIssuedSubscriber : GeneralEventSubscriber<Tournaments.TournamentIssuedEventResponse>() {
+
+    override val eventName = "TournamentIssued"
 
     @Autowired
     lateinit var userRepository: UserRepository
@@ -45,15 +39,8 @@ class TournamentIssuedProcessor : FlowableSubscriber<Tournaments.TournamentIssue
     @Autowired
     lateinit var notificationService: NotificationService
 
-    private val logger = KotlinLogging.logger {}
-
     @Autowired
-    lateinit var web3DataRepository: Web3DataRepository
-
-    override fun onSubscribe(subscription: Subscription) {
-        logger.info("Subscribed to TournamentIssuedEvent.")
-        subscription.request(Long.MAX_VALUE)
-    }
+    override lateinit var web3DataRepository: Web3DataRepository
 
     override fun onNext(eventData: Tournaments.TournamentIssuedEventResponse) {
         try {
@@ -116,25 +103,11 @@ class TournamentIssuedProcessor : FlowableSubscriber<Tournaments.TournamentIssue
 
             this.proceedBlock(eventData.log.blockNumber)
         } catch (t: Exception) {
-            logger.info("Retrying...")
+            logger.info("Retrying since encountered an exception ${t.localizedMessage}")
             this.onNext(eventData)
         } catch (t: Error) {
             logger.error(t.localizedMessage)
             this.proceedBlock(eventData.log.blockNumber)
         }
-    }
-
-    override fun onComplete() {
-        logger.info("Complete TournamentIssuedEvent.")
-    }
-
-    override fun onError(exception: Throwable) {
-        logger.error(exception.localizedMessage)
-    }
-
-    private fun proceedBlock(blockNumber: BigInteger) {
-        web3DataRepository.save(
-                Web3Data(id = "TournamentIssued", fromBlock = blockNumber + 1.toBigInteger())
-        )
     }
 }
