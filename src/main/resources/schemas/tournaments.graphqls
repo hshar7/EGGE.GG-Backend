@@ -33,6 +33,7 @@ type Tournament {
     matches: [Match]
     description: String!
     prize: BigDecimal!
+    buyInFee: BigDecimal!
     maxPlayers: Int!
     participants: [User]
     token: Token

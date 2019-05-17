@@ -81,6 +81,7 @@ class TournamentIssuedSubscriber : GeneralEventSubscriber<Tournaments.Tournament
                     winners = emptyList(),
                     token = token,
                     prize = 0.toBigDecimal(),
+                    buyInFee = dataObj.buyInFee,
                     participants = arrayListOf(),
                     game = game,
                     matches = arrayListOf(),

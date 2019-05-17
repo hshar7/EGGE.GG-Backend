@@ -30,6 +30,7 @@ data class Tournament (
         var name: String,
         var description: String,
         var prize: BigDecimal,
+        var buyInFee: BigDecimal = 0.toBigDecimal(),
         @DBRef val owner: User,
         val maxPlayers: Int,
         val prizeDistribution: ArrayList<Int>,
