@@ -1,7 +1,6 @@
 package com.hshar.eggegg.service
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameter
@@ -12,14 +11,19 @@ import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.repository.*
 import com.hshar.eggegg.service.eventsubscriber.*
 import findOne
+import io.reactivex.subscribers.DisposableSubscriber
+import org.apache.commons.collections4.collection.SynchronizedCollection
+
 
 @Service
 final class EventListenerService @Autowired constructor(
-        private val deadlineChangedSubscriber: DeadlineChangedSubscriber,
-        private val tournamentFinalizedSubscriber: TournamentFinalizedSubscriber,
-        private val contributionAddedSubscriber: ContributionAddedSubscriber,
-        private val tournamentIssuedSubscriber: TournamentIssuedSubscriber,
         private val web3DataRepository: Web3DataRepository,
+        private val userRepository: UserRepository,
+        private val gameRepository: GameRepository,
+        private val tournamentRepository: TournamentRepository,
+        private val tokenRepository: TokenRepository,
+        private val notificationService: NotificationService,
+        private val matchRepository: MatchRepository,
         private val web3j: Web3j
 ) {
     companion object {
@@ -28,12 +32,17 @@ final class EventListenerService @Autowired constructor(
         const val GAS_LIMIT = 4500000
     }
 
+    private val subscribers: SynchronizedCollection<DisposableSubscriber<out Any>> =
+            SynchronizedCollection.synchronizedCollection(arrayListOf())
 
-    // TODO: Implement reconnect logic for web socket
+    init {
+        initSubscribers()
+    }
+
     // TODO: Implement a black list
     // TODO: Add a way to prevent processing of multiple messages. Using Redis?
-    @Bean
-    fun listenToContractEvents() {
+    @Synchronized
+    fun initSubscribers() {
 
         val transactionManager = ReadonlyTransactionManager(web3j, "0x0")
         val gasProvider = StaticGasProvider(GAS_PRICE.toBigInteger(), GAS_LIMIT.toBigInteger())
@@ -45,45 +54,78 @@ final class EventListenerService @Autowired constructor(
                 gasProvider
         )
 
-        tournamentIssuedEvent(tournamentsContract)
-        contributionAddedEvent(tournamentsContract)
-        tournamentDeadlineChangedEvent(tournamentsContract)
-        tournamentFinalizedEvent(tournamentsContract)
+        if (!subscribers.isEmpty()) {
+            for (i in 0 until subscribers.size) { // Has to be done this way to not use the concurrent iterator
+                val sub: DisposableSubscriber<out Any> = subscribers.toList()[i]
+                if (!sub.isDisposed) sub.dispose()
+            }
+        }
+        subscribers.clear()
+
+        subscribers.add(tournamentIssuedEvent(tournamentsContract))
+        subscribers.add(contributionAddedEvent(tournamentsContract))
+        subscribers.add(tournamentDeadlineChangedEvent(tournamentsContract))
+        subscribers.add(tournamentFinalizedEvent(tournamentsContract))
     }
 
-    private fun tournamentIssuedEvent(tournamentsContract: Tournaments) {
-        val fromBlock = web3DataRepository.findOne(tournamentIssuedSubscriber.eventName)?.fromBlock ?: 0.toBigInteger()
+    private fun tournamentIssuedEvent(tournamentsContract: Tournaments)
+            : DisposableSubscriber<Tournaments.TournamentIssuedEventResponse> {
+        val fromBlock = web3DataRepository.findOne(TournamentIssuedSubscriber.EVENT_NAME)?.fromBlock ?: 0.toBigInteger()
 
-        tournamentsContract.tournamentIssuedEventFlowable(
+        return tournamentsContract.tournamentIssuedEventFlowable(
                 DefaultBlockParameter.valueOf(fromBlock),
                 DefaultBlockParameterName.LATEST
-        ).subscribeWith(tournamentIssuedSubscriber)
+        ).subscribeWith(TournamentIssuedSubscriber(
+                userRepository,
+                gameRepository,
+                tournamentRepository,
+                tokenRepository,
+                notificationService,
+                web3DataRepository
+        ))
     }
 
-    private fun contributionAddedEvent(tournamentsContract: Tournaments) {
-        val fromBlock = web3DataRepository.findOne(contributionAddedSubscriber.eventName)?.fromBlock ?: 0.toBigInteger()
+    private fun contributionAddedEvent(tournamentsContract: Tournaments)
+            : DisposableSubscriber<Tournaments.ContributionAddedEventResponse> {
+        val fromBlock = web3DataRepository.findOne(ContributionAddedSubscriber.EVENT_NAME)?.fromBlock
+                ?: 0.toBigInteger()
 
-        tournamentsContract.contributionAddedEventFlowable(
+        return tournamentsContract.contributionAddedEventFlowable(
                 DefaultBlockParameter.valueOf(fromBlock),
                 DefaultBlockParameterName.LATEST
-        ).subscribeWith(contributionAddedSubscriber)
+        ).subscribeWith(ContributionAddedSubscriber(
+                tournamentRepository,
+                matchRepository,
+                userRepository,
+                web3DataRepository
+        ))
     }
 
-    private fun tournamentDeadlineChangedEvent(tournamentsContract: Tournaments) {
-        val fromBlock = web3DataRepository.findOne(deadlineChangedSubscriber.eventName)?.fromBlock
-                ?: 0.toBigInteger()
+    private fun tournamentDeadlineChangedEvent(tournamentsContract: Tournaments)
+            : DisposableSubscriber<Tournaments.TournamentDeadlineChangedEventResponse> {
+        val fromBlock = web3DataRepository.findOne(DeadlineChangedSubscriber.EVENT_NAME)?.fromBlock ?: 0.toBigInteger()
 
-        tournamentsContract.tournamentDeadlineChangedEventFlowable(
+        return tournamentsContract.tournamentDeadlineChangedEventFlowable(
                 DefaultBlockParameter.valueOf(fromBlock),
-                DefaultBlockParameterName.LATEST).subscribeWith(deadlineChangedSubscriber)
+                DefaultBlockParameterName.LATEST
+        ).subscribeWith(DeadlineChangedSubscriber(
+                tournamentRepository,
+                web3DataRepository
+        ))
     }
 
-    private fun tournamentFinalizedEvent(tournamentsContract: Tournaments) {
-        val fromBlock = web3DataRepository.findOne(tournamentFinalizedSubscriber.eventName)?.fromBlock
+    private fun tournamentFinalizedEvent(tournamentsContract: Tournaments)
+            : DisposableSubscriber<Tournaments.TournamentFinalizedEventResponse> {
+        val fromBlock = web3DataRepository.findOne(TournamentFinalizedSubscriber.EVENT_NAME)?.fromBlock
                 ?: 0.toBigInteger()
 
-        tournamentsContract.tournamentFinalizedEventFlowable(
+        return tournamentsContract.tournamentFinalizedEventFlowable(
                 DefaultBlockParameter.valueOf(fromBlock),
-                DefaultBlockParameterName.LATEST).subscribeWith(tournamentFinalizedSubscriber)
+                DefaultBlockParameterName.LATEST
+        ).subscribeWith(TournamentFinalizedSubscriber(
+                tournamentRepository,
+                matchRepository,
+                web3DataRepository
+        ))
     }
 }

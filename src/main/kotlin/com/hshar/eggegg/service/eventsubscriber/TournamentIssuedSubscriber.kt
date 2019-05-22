@@ -14,33 +14,22 @@ import com.hshar.eggegg.service.NotificationService
 import findOne
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import org.web3j.abi.datatypes.generated.Uint256
 import java.util.*
 
-@Service
-class TournamentIssuedSubscriber : GeneralEventSubscriber<Tournaments.TournamentIssuedEventResponse>() {
+class TournamentIssuedSubscriber(
+        private val userRepository: UserRepository,
+        private val gameRepository: GameRepository,
+        private val tournamentRepository: TournamentRepository,
+        private val tokenRepository: TokenRepository,
+        private val notificationService: NotificationService,
+        override var web3DataRepository: Web3DataRepository
+) : GeneralEventSubscriber<Tournaments.TournamentIssuedEventResponse>() {
 
-    override val eventName = "TournamentIssued"
-
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var gameRepository: GameRepository
-
-    @Autowired
-    lateinit var tournamentRepository: TournamentRepository
-
-    @Autowired
-    lateinit var tokenRepository: TokenRepository
-
-    @Autowired
-    lateinit var notificationService: NotificationService
-
-    @Autowired
-    override lateinit var web3DataRepository: Web3DataRepository
+    companion object {
+        const val EVENT_NAME = "TournamentIssued"
+    }
+    override val eventName = EVENT_NAME
 
     override fun onNext(eventData: Tournaments.TournamentIssuedEventResponse) {
         try {

@@ -1,20 +1,36 @@
 package com.hshar.eggegg.config
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.websocket.WebSocketService
+import org.web3j.protocol.websocket.EggWebSocketService
+import org.web3j.protocol.websocket.WebSocketClient
+import java.net.ConnectException
+import java.net.URI
+import org.springframework.context.ApplicationEventPublisher
 
 @Configuration
 class Web3jConfig {
 
+    @Autowired
+    lateinit var applicationEventPublisher: ApplicationEventPublisher
+
     @Bean
     fun web3jProvider(): Web3j {
-        val wssService = WebSocketService(
-            "wss://rinkeby.infura.io/ws",
-            true
+
+        val wssService = EggWebSocketService(
+                WebSocketClient(URI("wss://rinkeby.infura.io/ws")),
+                applicationEventPublisher,
+                true
         )
-        wssService.connect()
+
+        try {
+            wssService.connect()
+        } catch (e: ConnectException) {
+            throw RuntimeException("Unable to connect to eth node websocket", e)
+        }
+
         return Web3j.build(wssService)
     }
 }

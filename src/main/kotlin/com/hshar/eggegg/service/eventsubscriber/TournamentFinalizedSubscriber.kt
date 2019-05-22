@@ -6,23 +6,19 @@ import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.repository.*
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import org.web3j.abi.datatypes.Address
 
-@Service
-class TournamentFinalizedSubscriber : GeneralEventSubscriber<Tournaments.TournamentFinalizedEventResponse>() {
+class TournamentFinalizedSubscriber(
+        private val tournamentRepository: TournamentRepository,
+        private val matchRepository: MatchRepository,
+        override var web3DataRepository: Web3DataRepository
+) : GeneralEventSubscriber<Tournaments.TournamentFinalizedEventResponse>() {
 
-    override val eventName = "TournamentFinalized"
+    companion object {
+        const val EVENT_NAME = "TournamentFinalized"
+    }
 
-    @Autowired
-    lateinit var tournamentRepository: TournamentRepository
-    
-    @Autowired
-    lateinit var matchRepository: MatchRepository
-
-    @Autowired
-    override lateinit var web3DataRepository: Web3DataRepository
+    override val eventName = EVENT_NAME
 
     override fun onNext(eventData: Tournaments.TournamentFinalizedEventResponse) {
         try {

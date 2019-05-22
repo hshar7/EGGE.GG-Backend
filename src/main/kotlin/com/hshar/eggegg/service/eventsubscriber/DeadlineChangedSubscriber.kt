@@ -10,18 +10,15 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class DeadlineChangedSubscriber : GeneralEventSubscriber<Tournaments.TournamentDeadlineChangedEventResponse>() {
+class DeadlineChangedSubscriber(
+        private val tournamentRepository: TournamentRepository,
+        override var web3DataRepository: Web3DataRepository
+) : GeneralEventSubscriber<Tournaments.TournamentDeadlineChangedEventResponse>() {
 
-    override val eventName = "DeadlineChanged"
-
-    @Autowired
-    lateinit var tournamentRepository: TournamentRepository
-
-    @Autowired
-    lateinit var matchRepository: MatchRepository
-
-    @Autowired
-    override lateinit var web3DataRepository: Web3DataRepository
+    companion object {
+        const val EVENT_NAME = "DeadlineChanged"
+    }
+    override val eventName = EVENT_NAME
 
     override fun onNext(eventData: Tournaments.TournamentDeadlineChangedEventResponse) {
         try {

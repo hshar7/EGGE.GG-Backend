@@ -8,26 +8,19 @@ import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.*
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.*
 
-@Service
-class ContributionAddedSubscriber : GeneralEventSubscriber<Tournaments.ContributionAddedEventResponse>() {
+class ContributionAddedSubscriber(
+        private val tournamentRepository: TournamentRepository,
+        private val matchRepository: MatchRepository,
+        private val userRepository: UserRepository,
+        override var web3DataRepository: Web3DataRepository
+) : GeneralEventSubscriber<Tournaments.ContributionAddedEventResponse>() {
 
-    override val eventName = "ContributionAdded"
-
-    @Autowired
-    lateinit var tournamentRepository: TournamentRepository
-
-    @Autowired
-    lateinit var matchRepository: MatchRepository
-
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    override lateinit var web3DataRepository: Web3DataRepository
+    companion object {
+        const val EVENT_NAME = "ContributionAdded"
+    }
+    override var eventName = EVENT_NAME
 
     override fun onNext(eventData: Tournaments.ContributionAddedEventResponse) {
         try {
