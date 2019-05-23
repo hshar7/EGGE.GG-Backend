@@ -2,7 +2,6 @@ package com.hshar.eggegg.service.eventsubscriber
 
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.TournamentType
@@ -14,7 +13,8 @@ class ContributionAddedSubscriber(
         private val tournamentRepository: TournamentRepository,
         private val matchRepository: MatchRepository,
         private val userRepository: UserRepository,
-        override var web3DataRepository: Web3DataRepository
+        override var web3DataRepository: Web3DataRepository,
+        override var eventDataRepository: EventDataRepository
 ) : GeneralEventSubscriber<Tournaments.ContributionAddedEventResponse>() {
 
     companion object {
@@ -24,6 +24,7 @@ class ContributionAddedSubscriber(
 
     override fun onNext(eventData: Tournaments.ContributionAddedEventResponse) {
         try {
+            beforeNext(eventData.log.transactionHash)
             logger.info("Tournament ${eventData._tournamentId} fund" +
                             " by ${eventData._contributor} for amount ${eventData._amount}.")
 
@@ -50,14 +51,13 @@ class ContributionAddedSubscriber(
             tournament.prize += eventData._amount.toBigDecimal()
             tournamentRepository.save(tournament)
 
-            this.proceedBlock(eventData.log.blockNumber)
-
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         } catch (t: Exception) {
             logger.info("Retrying since encountered an exception ${t.localizedMessage}")
             this.onNext(eventData)
         } catch (t: Error) {
             logger.error(t.localizedMessage)
-            this.proceedBlock(eventData.log.blockNumber)
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         }
     }
 }

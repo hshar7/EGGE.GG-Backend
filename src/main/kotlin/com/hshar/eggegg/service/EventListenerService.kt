@@ -17,13 +17,14 @@ import org.apache.commons.collections4.collection.SynchronizedCollection
 
 @Service
 final class EventListenerService @Autowired constructor(
-        private val web3DataRepository: Web3DataRepository,
         private val userRepository: UserRepository,
         private val gameRepository: GameRepository,
         private val tournamentRepository: TournamentRepository,
         private val tokenRepository: TokenRepository,
         private val notificationService: NotificationService,
         private val matchRepository: MatchRepository,
+        private val web3DataRepository: Web3DataRepository,
+        private val eventDataRepository: EventDataRepository,
         private val web3j: Web3j
 ) {
     companion object {
@@ -81,7 +82,8 @@ final class EventListenerService @Autowired constructor(
                 tournamentRepository,
                 tokenRepository,
                 notificationService,
-                web3DataRepository
+                web3DataRepository,
+                eventDataRepository
         ))
     }
 
@@ -97,7 +99,8 @@ final class EventListenerService @Autowired constructor(
                 tournamentRepository,
                 matchRepository,
                 userRepository,
-                web3DataRepository
+                web3DataRepository,
+                eventDataRepository
         ))
     }
 
@@ -110,7 +113,8 @@ final class EventListenerService @Autowired constructor(
                 DefaultBlockParameterName.LATEST
         ).subscribeWith(DeadlineChangedSubscriber(
                 tournamentRepository,
-                web3DataRepository
+                web3DataRepository,
+                eventDataRepository
         ))
     }
 
@@ -125,7 +129,8 @@ final class EventListenerService @Autowired constructor(
         ).subscribeWith(TournamentFinalizedSubscriber(
                 tournamentRepository,
                 matchRepository,
-                web3DataRepository
+                web3DataRepository,
+                eventDataRepository
         ))
     }
 }

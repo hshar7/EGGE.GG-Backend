@@ -4,7 +4,6 @@ import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Match
 import com.hshar.eggegg.model.permanent.Tournament
-import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.MatchRepository
@@ -14,7 +13,6 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
-import java.util.*
 
 @Service
 class TournamentMutation : GraphQLMutationResolver {

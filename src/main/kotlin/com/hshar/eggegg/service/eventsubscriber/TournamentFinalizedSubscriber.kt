@@ -3,7 +3,6 @@ package com.hshar.eggegg.service.eventsubscriber
 import className
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.repository.*
 import org.web3j.abi.datatypes.Address
@@ -11,7 +10,8 @@ import org.web3j.abi.datatypes.Address
 class TournamentFinalizedSubscriber(
         private val tournamentRepository: TournamentRepository,
         private val matchRepository: MatchRepository,
-        override var web3DataRepository: Web3DataRepository
+        override var web3DataRepository: Web3DataRepository,
+        override var eventDataRepository: EventDataRepository
 ) : GeneralEventSubscriber<Tournaments.TournamentFinalizedEventResponse>() {
 
     companion object {
@@ -22,6 +22,7 @@ class TournamentFinalizedSubscriber(
 
     override fun onNext(eventData: Tournaments.TournamentFinalizedEventResponse) {
         try {
+            beforeNext(eventData.log.transactionHash)
             logger.info("Tournament ${eventData._tournamentId} finalized event.")
 
             val tournament = tournamentRepository.findByTournamentId(eventData._tournamentId.toInt())
@@ -49,14 +50,14 @@ class TournamentFinalizedSubscriber(
             }
             tournamentRepository.save(tournament)
 
-            this.proceedBlock(eventData.log.blockNumber)
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
 
         } catch (t: Exception) {
             logger.info("Retrying since encountered an exception ${t.localizedMessage}")
             this.onNext(eventData)
         } catch (t: Error) {
             logger.error(t.localizedMessage)
-            this.proceedBlock(eventData.log.blockNumber)
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         }
     }
 }

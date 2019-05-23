@@ -23,7 +23,8 @@ class TournamentIssuedSubscriber(
         private val tournamentRepository: TournamentRepository,
         private val tokenRepository: TokenRepository,
         private val notificationService: NotificationService,
-        override var web3DataRepository: Web3DataRepository
+        override var web3DataRepository: Web3DataRepository,
+        override var eventDataRepository: EventDataRepository
 ) : GeneralEventSubscriber<Tournaments.TournamentIssuedEventResponse>() {
 
     companion object {
@@ -33,6 +34,7 @@ class TournamentIssuedSubscriber(
 
     override fun onNext(eventData: Tournaments.TournamentIssuedEventResponse) {
         try {
+            beforeNext(eventData.log.transactionHash)
             logger.info("Tournament ${eventData._tournamentId} create by ${eventData._organizer}.")
 
             val user = userRepository.findByPublicAddress(eventData._organizer) ?: userRepository.insert(User(
@@ -91,13 +93,13 @@ class TournamentIssuedSubscriber(
                     createdAt = Date()
             ))
 
-            this.proceedBlock(eventData.log.blockNumber)
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         } catch (t: Exception) {
             logger.info("Retrying since encountered an exception ${t.localizedMessage}")
             this.onNext(eventData)
         } catch (t: Error) {
             logger.error(t.localizedMessage)
-            this.proceedBlock(eventData.log.blockNumber)
+            this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         }
     }
 }
