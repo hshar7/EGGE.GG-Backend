@@ -5,10 +5,7 @@ import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
-
 import java.io.IOException;
-
-import static java.lang.Thread.sleep;
 
 @Data
 public class EggWebSocketService extends WebSocketService {
@@ -32,15 +29,15 @@ public class EggWebSocketService extends WebSocketService {
         try {
             super.onWebSocketClose();
         } catch (Throwable t) {
-            log.warn("Error when closing websocket, this is expected during a websocket reconnection (for now).", t);
+            log.warn("Error when reconnecting websocket", t);
         }
     }
 
     @Override
-    synchronized public <T extends Response> T send(Request request, Class<T> responseType) throws IOException {
+    synchronized public <T extends Response> T send(Request request, Class<T> responseType) {
         try {
             return super.send(request, responseType);
-        } catch (WebsocketNotConnectedException e) {
+        } catch (WebsocketNotConnectedException | IOException e) {
             log.error("WebSocket disconnected. Reconnecting...");
             try {
                 if (this.webSocketClient.reconnectBlocking()) {
