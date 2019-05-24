@@ -25,6 +25,7 @@ final class EventListenerService @Autowired constructor(
         private val matchRepository: MatchRepository,
         private val web3DataRepository: Web3DataRepository,
         private val eventDataRepository: EventDataRepository,
+        private val eventRetryDataRepository: EventRetryDataRepository,
         private val web3j: Web3j
 ) {
     companion object {
@@ -83,7 +84,8 @@ final class EventListenerService @Autowired constructor(
                 tokenRepository,
                 notificationService,
                 web3DataRepository,
-                eventDataRepository
+                eventDataRepository,
+                eventRetryDataRepository
         ))
     }
 
@@ -100,7 +102,8 @@ final class EventListenerService @Autowired constructor(
                 matchRepository,
                 userRepository,
                 web3DataRepository,
-                eventDataRepository
+                eventDataRepository,
+                eventRetryDataRepository
         ))
     }
 
@@ -114,7 +117,8 @@ final class EventListenerService @Autowired constructor(
         ).subscribeWith(DeadlineChangedSubscriber(
                 tournamentRepository,
                 web3DataRepository,
-                eventDataRepository
+                eventDataRepository,
+                eventRetryDataRepository
         ))
     }
 
@@ -130,7 +134,8 @@ final class EventListenerService @Autowired constructor(
                 tournamentRepository,
                 matchRepository,
                 web3DataRepository,
-                eventDataRepository
+                eventDataRepository,
+                eventRetryDataRepository
         ))
     }
 }

@@ -24,7 +24,8 @@ class TournamentIssuedSubscriber(
         private val tokenRepository: TokenRepository,
         private val notificationService: NotificationService,
         override var web3DataRepository: Web3DataRepository,
-        override var eventDataRepository: EventDataRepository
+        override var eventDataRepository: EventDataRepository,
+        override var eventRetryDataRepository: EventRetryDataRepository
 ) : GeneralEventSubscriber<Tournaments.TournamentIssuedEventResponse>() {
 
     companion object {
@@ -95,8 +96,13 @@ class TournamentIssuedSubscriber(
 
             this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         } catch (t: Exception) {
-            logger.warn("Retrying since encountered an exception ${t.localizedMessage}", t)
-            this.onNext(eventData)
+            if (needsRetry(eventData.log.transactionHash)) {
+                logger.warn("Retrying since encountered an exception ${t.localizedMessage}", t)
+                Thread.sleep(1000)
+                this.onNext(eventData)
+            } else {
+                this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
+            }
         } catch (t: Error) {
             logger.error(t.localizedMessage, t)
             this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)

@@ -1,9 +1,12 @@
 package com.hshar.eggegg.service.eventsubscriber
 
 import com.hshar.eggegg.model.permanent.EventData
+import com.hshar.eggegg.model.permanent.EventRetryData
 import com.hshar.eggegg.model.permanent.Web3Data
 import com.hshar.eggegg.repository.EventDataRepository
+import com.hshar.eggegg.repository.EventRetryDataRepository
 import com.hshar.eggegg.repository.Web3DataRepository
+import findOne
 import io.reactivex.subscribers.DisposableSubscriber
 import mu.KotlinLogging
 import java.math.BigInteger
@@ -12,8 +15,11 @@ abstract class GeneralEventSubscriber<T> : DisposableSubscriber<T>() {
 
     abstract var web3DataRepository: Web3DataRepository
     abstract var eventDataRepository: EventDataRepository
+    abstract var eventRetryDataRepository: EventRetryDataRepository
     abstract val eventName: String
     protected val logger = KotlinLogging.logger {}
+
+    protected val retries = 5
 
     override fun onStart() {
         super.onStart()
@@ -39,5 +45,11 @@ abstract class GeneralEventSubscriber<T> : DisposableSubscriber<T>() {
         if (web3DataRepository.existsById(transactionHash)) {
             throw Error("Already processed.")
         }
+    }
+
+    protected fun needsRetry(transactionHash: String): Boolean {
+        val retryData = eventRetryDataRepository.findOne(transactionHash)
+                ?: eventRetryDataRepository.save(EventRetryData(transactionHash))
+        return retryData.retries < retries
     }
 }

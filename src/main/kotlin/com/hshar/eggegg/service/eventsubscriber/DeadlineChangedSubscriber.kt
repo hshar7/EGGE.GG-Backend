@@ -11,7 +11,8 @@ import java.util.*
 class DeadlineChangedSubscriber(
         private val tournamentRepository: TournamentRepository,
         override var web3DataRepository: Web3DataRepository,
-        override var eventDataRepository: EventDataRepository
+        override var eventDataRepository: EventDataRepository,
+        override var eventRetryDataRepository: EventRetryDataRepository
 ) : GeneralEventSubscriber<Tournaments.TournamentDeadlineChangedEventResponse>() {
 
     companion object {
@@ -34,10 +35,15 @@ class DeadlineChangedSubscriber(
             proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
 
         } catch (t: Exception) {
-            logger.info("Retrying since encountered an exception ${t.localizedMessage}")
-            onNext(eventData)
+            if (needsRetry(eventData.log.transactionHash)) {
+                logger.warn("Retrying since encountered an exception ${t.localizedMessage}", t)
+                Thread.sleep(1000)
+                this.onNext(eventData)
+            } else {
+                this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
+            }
         } catch (t: Error) {
-            logger.error(t.localizedMessage)
+            logger.error(t.localizedMessage, t)
             proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         }
     }
