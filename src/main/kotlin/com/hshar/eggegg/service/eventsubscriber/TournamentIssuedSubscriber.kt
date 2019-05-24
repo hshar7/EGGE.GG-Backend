@@ -95,10 +95,10 @@ class TournamentIssuedSubscriber(
 
             this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         } catch (t: Exception) {
-            logger.info("Retrying since encountered an exception ${t.localizedMessage}")
+            logger.warn("Retrying since encountered an exception ${t.localizedMessage}", t)
             this.onNext(eventData)
         } catch (t: Error) {
-            logger.error(t.localizedMessage)
+            logger.error(t.localizedMessage, t)
             this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
         }
     }
