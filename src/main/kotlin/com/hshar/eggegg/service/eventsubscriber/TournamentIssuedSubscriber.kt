@@ -101,6 +101,7 @@ class TournamentIssuedSubscriber(
                 Thread.sleep(1000)
                 this.onNext(eventData)
             } else {
+                logger.error("Max retries reached, SKIPPING ${eventData.log.transactionHash}", t)
                 this.proceedBlock(eventData.log.blockNumber, eventData.log.transactionHash)
             }
         } catch (t: Error) {

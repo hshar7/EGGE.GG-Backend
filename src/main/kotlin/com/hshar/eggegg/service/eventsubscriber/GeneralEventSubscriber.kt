@@ -19,7 +19,7 @@ abstract class GeneralEventSubscriber<T> : DisposableSubscriber<T>() {
     abstract val eventName: String
     protected val logger = KotlinLogging.logger {}
 
-    protected val retries = 5
+    protected val retries = 6
 
     override fun onStart() {
         super.onStart()
@@ -49,7 +49,9 @@ abstract class GeneralEventSubscriber<T> : DisposableSubscriber<T>() {
 
     protected fun needsRetry(transactionHash: String): Boolean {
         val retryData = eventRetryDataRepository.findOne(transactionHash)
-                ?: eventRetryDataRepository.save(EventRetryData(transactionHash))
+                ?: eventRetryDataRepository.save(EventRetryData(id = transactionHash))
+        retryData.retries++
+        eventRetryDataRepository.save(retryData)
         return retryData.retries < retries
     }
 }

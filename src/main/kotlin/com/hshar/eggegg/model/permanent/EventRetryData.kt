@@ -5,5 +5,5 @@ import org.springframework.data.redis.core.RedisHash
 @RedisHash("eventRetryData")
 data class EventRetryData (
     val id: String,
-    val retries: Int = 0
+    var retries: Int = 0
 )
