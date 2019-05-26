@@ -42,7 +42,6 @@ final class EventListenerService @Autowired constructor(
     }
 
     // TODO: Implement a black list
-    // TODO: Add a way to prevent processing of multiple messages. Using Redis?
     @Synchronized
     fun initSubscribers() {
 

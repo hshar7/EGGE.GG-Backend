@@ -10,6 +10,7 @@ class EventListenerManager {
     @Autowired
     lateinit var eventListenerService: EventListenerService
 
+    // TODO: This happens many times for each subscriber. Need a way to call disregard next calls
     fun initializeSubscribers() {
         eventListenerService.initSubscribers()
     }
