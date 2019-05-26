@@ -87,7 +87,7 @@ class UserController {
                 ?: throw ResourceNotFoundException("User", "id", userPrincipal.id)
 
         val fullFileName = "users/${userPrincipal.id}/${file.originalFilename}"
-        val url = "https://s3.us-east-2.amazonaws.com/eggegg-images/$fullFileName"
+        val url = "https://s3.us-east-1.amazonaws.com/eggegg-imgs/$fullFileName"
 
         when (s3AwsService.putObject(fullFileName, file)) {
             true -> {
