@@ -14,3 +14,12 @@ extend type Query {
     myProfile: User
     usersByOrganization(organizationId: String): [User]
 }
+
+extend type Mutation {
+    metadata(metadata: UserInput): User
+}
+
+input UserInput {
+    name: String
+    email: String
+}

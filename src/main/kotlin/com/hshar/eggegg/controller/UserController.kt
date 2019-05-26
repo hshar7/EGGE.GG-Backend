@@ -7,7 +7,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.payload.JwtAuthenticationResponse
-import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider
 import com.hshar.eggegg.security.UserPrincipal
@@ -35,9 +34,6 @@ class UserController {
 
     @Autowired
     lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var organizationRepository: OrganizationRepository
 
     @Autowired
     lateinit var authenticationManager: AuthenticationManager
@@ -97,35 +93,6 @@ class UserController {
             }
             false -> return ResponseEntity("{\"status\": \"failed\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
-    }
-
-    @PostMapping("/user/{id}/metadata")
-    fun editUserMetadata(@PathVariable("id") id: String, @RequestBody requestBody: String): ResponseEntity<String> {
-        val editRequest = Gson().fromJson<JsonObject>(requestBody)
-
-        val user = userRepository.findById(id)
-                .orElseThrow { ResourceNotFoundException("User", "id", id) }
-
-        if (editRequest["name"] != null) {
-            user.name = editRequest["name"].asString
-        }
-        if (editRequest["email"] != null) {
-            user.email = editRequest["email"].asString
-        }
-        if (editRequest["organizationId"] != null) {
-            val org = organizationRepository.findById(editRequest["organizationId"].asString)
-                    .orElseThrow {
-                        ResourceNotFoundException("Organization", "id", editRequest["organizationId"].asString)
-                    }
-            user.organization = org
-        }
-
-        return ResponseEntity(Gson().toJson(userRepository.save(user)), HttpStatus.OK)
-    }
-
-    @GetMapping("/users")
-    fun getAllUsers(): ResponseEntity<String> {
-        return ResponseEntity(Gson().toJson(userRepository.findAll()), HttpStatus.OK)
     }
 
     private fun verifyAddressFromSignature(address: String, signature: String): Boolean {

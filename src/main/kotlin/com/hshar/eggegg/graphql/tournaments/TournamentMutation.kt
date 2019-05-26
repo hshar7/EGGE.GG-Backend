@@ -4,13 +4,16 @@ import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Match
 import com.hshar.eggegg.model.permanent.Tournament
+import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
+import com.hshar.eggegg.security.UserPrincipal
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
 
@@ -55,8 +58,16 @@ class TournamentMutation : GraphQLMutationResolver {
     }
 
     fun matchWinner(pos: Int, matchId: String): List<Match> {
+
+        val currentUser: User = userRepository.findByPublicAddress(getCurrentUser().username)
+                ?: throw ResourceNotFoundException("User", "publicAddress", getCurrentUser().username)
+
         val match = matchRepository.findById(matchId)
             .orElseThrow { ResourceNotFoundException("Match", "id", matchId) }
+
+        if ((match.tournament as Tournament).owner.publicAddress != currentUser.publicAddress) {
+            return emptyList()
+        }
 
         if (pos == 1) {
             match.winner = match.player1
@@ -92,5 +103,9 @@ class TournamentMutation : GraphQLMutationResolver {
         }
 
         return matches
+    }
+
+    private fun getCurrentUser(): UserPrincipal {
+        return SecurityContextHolder.getContext().authentication.principal as UserPrincipal
     }
 }
