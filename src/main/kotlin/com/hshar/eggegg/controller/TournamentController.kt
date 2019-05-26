@@ -24,7 +24,7 @@ class TournamentController {
             @PathVariable tournamentId: String
     ): ResponseEntity<String> {
         val fullFileName = "$tournamentId/${file.originalFilename}"
-        val url = "https://s3.us-east-2.amazonaws.com/eggegg-images/$fullFileName"
+        val url = "https://s3.us-east-1.amazonaws.com/eggegg-imgs/$fullFileName"
 
         val tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow { ResourceNotFoundException("Tournament", "id", tournamentId) }
