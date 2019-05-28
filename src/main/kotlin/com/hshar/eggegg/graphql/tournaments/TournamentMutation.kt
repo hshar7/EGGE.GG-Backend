@@ -64,10 +64,10 @@ class TournamentMutation : GraphQLMutationResolver {
 
         val match = matchRepository.findById(matchId)
             .orElseThrow { ResourceNotFoundException("Match", "id", matchId) }
-
-        if ((match.tournament as Tournament).owner.publicAddress != currentUser.publicAddress) {
-            return emptyList()
-        }
+//
+//        if ((match.tournament as Tournament).owner.publicAddress != currentUser.publicAddress) {
+//            return emptyList()
+//        }
 
         if (pos == 1) {
             match.winner = match.player1
