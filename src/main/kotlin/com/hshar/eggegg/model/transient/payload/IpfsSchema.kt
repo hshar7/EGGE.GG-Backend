@@ -12,5 +12,5 @@ data class IpfsSchema (
     val tournamentFormat: TournamentFormat,
     val gameId: String,
     val description: String,
-    val buyInFee: BigDecimal
+    val buyInFee: BigDecimal?
 )

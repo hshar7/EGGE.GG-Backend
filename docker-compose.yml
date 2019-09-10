@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      -  /userlogin/dockerVolMongo/db:/data/db
+    networks:
+      - default

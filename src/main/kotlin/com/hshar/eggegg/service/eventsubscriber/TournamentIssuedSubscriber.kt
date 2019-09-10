@@ -73,7 +73,7 @@ class TournamentIssuedSubscriber(
                     winners = emptyList(),
                     token = token,
                     prize = 0.toBigDecimal(),
-                    buyInFee = dataObj.buyInFee,
+                    buyInFee = dataObj.buyInFee ?: 0.toBigDecimal(),
                     participants = arrayListOf(),
                     game = game,
                     matches = arrayListOf(),
