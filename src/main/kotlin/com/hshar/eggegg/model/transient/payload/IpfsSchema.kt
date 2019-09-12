@@ -7,10 +7,15 @@ import java.math.BigDecimal
 
 data class IpfsSchema (
     val name: String,
+    val description: String,
+    val gameId: String,
     val tournamentType: TournamentType,
     val bracketType: BracketType,
     val tournamentFormat: TournamentFormat,
-    val gameId: String,
-    val description: String,
+    /** Battle Royale Things **/
+    val rounds: Int = 3,
+    val pointsDistribution: ArrayList<Int>?,
+    val pointsToWin: Int = 15,
+    /** Battle Royale Things **/
     val buyInFee: BigDecimal?
 )

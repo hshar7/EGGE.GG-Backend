@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigDecimal
 import java.util.*
+import kotlin.collections.ArrayList
 
 interface AbstractTournament {
     val id: String
@@ -29,6 +30,11 @@ data class Tournament (
         @DBRef val token: Token,
         var name: String,
         var description: String,
+        /** Battle Royale Things **/
+        val rounds: Int = 3,
+        val pointsDistribution: ArrayList<Int>?,
+        val pointsToWin: Int = 15,
+        /** Battle Royale Things **/
         var prize: BigDecimal,
         var buyInFee: BigDecimal = 0.toBigDecimal(),
         @DBRef val owner: User,

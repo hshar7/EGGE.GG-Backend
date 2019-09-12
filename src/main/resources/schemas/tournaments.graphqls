@@ -12,6 +12,7 @@ enum TournamentStatus {
 
 enum BracketType {
     SINGLE_ELIMINATION,
+    BATTLE_ROYALE,
     DOUBLE_ELIMINATION,
     ROUND_ROBIN
 }
@@ -28,6 +29,9 @@ type Tournament {
     tournamentFormat: TournamentFormat!
     tournamentStatus: TournamentStatus!
     bracketType: BracketType!
+    rounds: Int
+    pointsToWin: Int
+    pointsDistribution: [Int]
     deadline: Date!
     name: String!
     matches: [Match]
