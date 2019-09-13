@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Notification
+import com.hshar.eggegg.model.permanent.Round
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.payload.IpfsSchema
@@ -74,7 +75,8 @@ class TournamentIssuedSubscriber(
                     token = token,
                     prize = 0.toBigDecimal(),
                     buyInFee = dataObj.buyInFee ?: 0.toBigDecimal(),
-                    rounds = dataObj.rounds,
+                    numberOfRounds = dataObj.numberOfRounds,
+                    rounds = arrayListOf(),
                     pointsDistribution = dataObj.pointsDistribution,
                     pointsToWin = dataObj.pointsToWin,
                     participants = arrayListOf(),

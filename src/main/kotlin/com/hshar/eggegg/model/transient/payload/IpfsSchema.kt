@@ -13,7 +13,7 @@ data class IpfsSchema (
     val bracketType: BracketType,
     val tournamentFormat: TournamentFormat,
     /** Battle Royale Things **/
-    val rounds: Int = 3,
+    val numberOfRounds: Int = 3,
     val pointsDistribution: ArrayList<Int>?,
     val pointsToWin: Int = 15,
     /** Battle Royale Things **/
