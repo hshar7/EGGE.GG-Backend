@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Notification
-import com.hshar.eggegg.model.permanent.Round
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.payload.IpfsSchema

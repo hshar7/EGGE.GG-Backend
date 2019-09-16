@@ -5,6 +5,7 @@ import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.Match
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.transient.type.BracketType
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.MatchRepository
@@ -46,8 +47,20 @@ class TournamentMutation : GraphQLMutationResolver {
         tournament.participants.add(user)
 
         if (tournament.participants.size == tournament.maxPlayers) {
-            tournament = TournamentOperations.generateBracket(tournament, matchRepository)
-        } else if (tournament.participants.size > tournament.maxPlayers) { return tournament }
+            if (tournament.bracketType == BracketType.BATTLE_ROYALE) {
+                for (i in 0 until tournament.numberOfRounds) {
+                    val standings = hashMapOf<String, Int>()
+                    tournament.participants.forEach {
+                        standings[it.id] = 0
+                    }
+                    tournament.rounds.add(standings)
+                }
+            } else { // Single Elimination for now
+                tournament = TournamentOperations.generateBracket(tournament, matchRepository)
+            }
+        } else if (tournament.participants.size > tournament.maxPlayers) {
+            return tournament
+        }
 
         tournamentRepository.save(tournament)
 
@@ -63,7 +76,7 @@ class TournamentMutation : GraphQLMutationResolver {
                 ?: throw ResourceNotFoundException("User", "publicAddress", getCurrentUser().username)
 
         val match = matchRepository.findById(matchId)
-            .orElseThrow { ResourceNotFoundException("Match", "id", matchId) }
+                .orElseThrow { ResourceNotFoundException("Match", "id", matchId) }
 //
 //        if ((match.tournament as Tournament).owner.publicAddress != currentUser.publicAddress) {
 //            return emptyList()
@@ -78,7 +91,7 @@ class TournamentMutation : GraphQLMutationResolver {
         val newMatch = matchRepository.save(match)
 
         val matches = mutableListOf<Match>()
-        newMatch.tournament.matches.forEach {thisMatch ->
+        newMatch.tournament.matches.forEach { thisMatch ->
             matches.add(thisMatch)
 
             var changed = false

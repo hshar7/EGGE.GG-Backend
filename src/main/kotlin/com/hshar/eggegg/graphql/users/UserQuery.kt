@@ -36,6 +36,9 @@ class UserQuery : GraphQLQueryResolver {
     }
 
     private fun getCurrentUser(): UserPrincipal {
+        if (SecurityContextHolder.getContext().authentication.principal == "anonymousUser") {
+            throw ResourceNotFoundException("Users", "Id", "anonymous")
+        }
         return SecurityContextHolder.getContext().authentication.principal as UserPrincipal
     }
 }

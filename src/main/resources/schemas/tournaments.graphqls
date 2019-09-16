@@ -22,10 +22,6 @@ enum TournamentFormat {
     TEAMS
 }
 
-type Rounds {
-    standings: Object
-}
-
 type Tournament {
     id: String!
     tournamentId: Int!
@@ -36,7 +32,7 @@ type Tournament {
     numberOfRounds: Int
     pointsToWin: Int
     pointsDistribution: [Int]
-    rounds: [Rounds]
+    rounds: [Object]
     deadline: Date!
     name: String!
     matches: [Match]
