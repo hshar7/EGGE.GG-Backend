@@ -1,17 +1,21 @@
 package com.hshar.eggegg.graphql.tournaments
 
+import className
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
+import com.hshar.eggegg.exception.UnauthorizedException
 import com.hshar.eggegg.model.permanent.Match
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.BracketType
+import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.hshar.eggegg.security.UserPrincipal
+import findOne
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
@@ -46,7 +50,8 @@ class TournamentMutation : GraphQLMutationResolver {
 
         tournament.participants.add(user)
 
-        if (tournament.participants.size == tournament.maxPlayers) {
+        if (tournament.participants.size == tournament.maxPlayers) { // TODO: Fix this up to allow more sign ups than max players
+            tournament.tournamentStatus = TournamentStatus.LIVE
             if (tournament.bracketType == BracketType.BATTLE_ROYALE) {
                 for (i in 0 until tournament.numberOfRounds) {
                     val standings = hashMapOf<String, Int>()
@@ -71,13 +76,12 @@ class TournamentMutation : GraphQLMutationResolver {
     }
 
     fun matchWinner(pos: Int, matchId: String): List<Match> {
-
         val currentUser: User = userRepository.findByPublicAddress(getCurrentUser().username)
                 ?: throw ResourceNotFoundException("User", "publicAddress", getCurrentUser().username)
 
         val match = matchRepository.findById(matchId)
                 .orElseThrow { ResourceNotFoundException("Match", "id", matchId) }
-//
+
 //        if ((match.tournament as Tournament).owner.publicAddress != currentUser.publicAddress) {
 //            return emptyList()
 //        }
@@ -116,6 +120,36 @@ class TournamentMutation : GraphQLMutationResolver {
         }
 
         return matches
+    }
+
+    fun roundUpdate(tournamentId: String, roundNumber: Int, round: MutableMap<String, Int>): Tournament {
+        val currentUser: User = userRepository.findByPublicAddress(getCurrentUser().username)
+                ?: throw ResourceNotFoundException("User", "publicAddress", getCurrentUser().username)
+
+        val tournament = tournamentRepository.findOne(tournamentId)
+                ?: throw ResourceNotFoundException(tournamentRepository.className(), "id", tournamentId)
+
+        if (tournament.owner.publicAddress != currentUser.publicAddress) {
+            throw UnauthorizedException("User is not owner of this tournament.")
+        }
+
+        tournament.rounds[roundNumber] = round
+
+        // Check for winner
+        val totals = hashMapOf<String, Int>()
+        tournament.rounds.forEach {
+            it.forEach { (userId, points) ->
+                totals[userId] = totals[userId]?.plus(points) ?: points
+                if (totals[userId]!! >= tournament.pointsToWin) {
+                    tournament.tournamentStatus = TournamentStatus.FINISHED
+                    val winner = userRepository.findOne(userId)
+                            ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
+                    tournament.firstPlace = winner
+                }
+            }
+        }
+
+        return tournamentRepository.save(tournament)
     }
 
     private fun getCurrentUser(): UserPrincipal {

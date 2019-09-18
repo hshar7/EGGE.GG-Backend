@@ -42,6 +42,7 @@ data class Tournament(
         val maxPlayers: Int,
         val prizeDistribution: ArrayList<Int>,
         var winners: List<String>,
+        @DBRef var firstPlace: User?,
         @DBRef var game: Game,
         @DBRef val participants: ArrayList<User>,
         @DBRef override val matches: ArrayList<Match>,
