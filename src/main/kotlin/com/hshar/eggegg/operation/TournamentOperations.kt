@@ -19,11 +19,14 @@ object TournamentOperations {
             var player2: User? = null
 
             if (i <= tournament.maxPlayers / 2) {
-                player1 = participants[(0..participants.size - 1).random()]
-                participants.remove(player1)
-                player2 = participants[(0..participants.size - 1).random()]
-                participants.remove(player2)
-
+                if (participants.isNotEmpty()) {
+                    player1 = participants[(0..participants.size - 1).random()]
+                    participants.remove(player1)
+                    if (participants.isNotEmpty()) {
+                        player2 = participants[(0..participants.size - 1).random()]
+                        participants.remove(player2)
+                    }
+                }
             } else {
                 match1 = matchesQueue.remove()
                 match2 = matchesQueue.remove()

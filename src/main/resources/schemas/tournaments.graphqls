@@ -38,11 +38,11 @@ type Tournament {
     name: String!
     matches: [Match]
     description: String!
-    firstPlace: User
     prize: BigDecimal!
     buyInFee: BigDecimal!
     maxPlayers: Int!
     participants: [User]
+    winners: [String]
     token: Token
     prizeDistribution: [Int]
     owner: User!
@@ -63,5 +63,6 @@ extend type Query {
 extend type Mutation {
     addParticipant(tournamentId: String, userId: String): Tournament
     matchWinner(pos: Int, matchId: String): [Match]!
+    startTournament(tournamentId: String): Tournament
     roundUpdate(tournamentId: String, roundNumber: Int, standings: Object): Tournament
 }

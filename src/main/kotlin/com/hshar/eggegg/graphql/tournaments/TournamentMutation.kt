@@ -37,41 +37,25 @@ class TournamentMutation : GraphQLMutationResolver {
     private val logger = KotlinLogging.logger {}
 
     fun addParticipant(tournamentId: String, userId: String): Tournament {
-        var tournament = tournamentRepository.findById(tournamentId)
+        val tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow { ResourceNotFoundException("Tournament", "id", tournamentId) }
 
         when (tournament.tournamentType) {
             TournamentType.PRIZE_POOL, TournamentType.OFF_CHAIN -> logger.info("Adding user")
             else -> throw Exception("Cannot add a participant offchain to this Tournament ${tournament.id}.")
         }
-
-        val user = userRepository.findById(userId)
-                .orElseThrow { ResourceNotFoundException("User", "id", userId) }
-
-        tournament.participants.add(user)
-
-        if (tournament.participants.size == tournament.maxPlayers) { // TODO: Fix this up to allow more sign ups than max players
-            tournament.tournamentStatus = TournamentStatus.LIVE
-            if (tournament.bracketType == BracketType.BATTLE_ROYALE) {
-                for (i in 0 until tournament.numberOfRounds) {
-                    val standings = hashMapOf<String, Int>()
-                    tournament.participants.forEach {
-                        standings[it.id] = 0
-                    }
-                    tournament.rounds.add(standings)
-                }
-            } else { // Single Elimination for now
-                tournament = TournamentOperations.generateBracket(tournament, matchRepository)
-            }
-        } else if (tournament.participants.size > tournament.maxPlayers) {
-            return tournament
+        if (tournament.tournamentStatus != TournamentStatus.NEW) {
+            throw Exception("Cannot add a new participant anymore to this Tournament ${tournament.id}.")
         }
 
+        val user = userRepository.findOne(userId) ?: throw ResourceNotFoundException("User", "id", userId)
+        tournament.participants.add(user)
         tournamentRepository.save(tournament)
 
         if (tournament.token.tokenVersion == 0) {
             tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
         }
+
         return tournament
     }
 
@@ -135,21 +119,52 @@ class TournamentMutation : GraphQLMutationResolver {
 
         tournament.rounds[roundNumber] = round
 
-        // Check for winner
+        // Check for winners
         val totals = hashMapOf<String, Int>()
         tournament.rounds.forEach {
             it.forEach { (userId, points) ->
                 totals[userId] = totals[userId]?.plus(points) ?: points
                 if (totals[userId]!! >= tournament.pointsToWin) {
                     tournament.tournamentStatus = TournamentStatus.FINISHED
-                    val winner = userRepository.findOne(userId)
-                            ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
-                    tournament.firstPlace = winner
                 }
             }
         }
 
+        if (tournament.tournamentStatus == TournamentStatus.FINISHED) {
+            totals.toSortedMap().forEach { (userId, _) ->
+                val winner = userRepository.findOne(userId)
+                        ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
+                tournament.winners.add(winner.publicAddress)
+            }
+        }
+
         return tournamentRepository.save(tournament)
+    }
+
+    fun startTournament(tournamentId: String): Tournament {
+        var tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow { ResourceNotFoundException("Tournament", "id", tournamentId) }
+
+        tournament.tournamentStatus = TournamentStatus.LIVE
+        if (tournament.bracketType == BracketType.BATTLE_ROYALE) {
+            for (i in 0 until tournament.numberOfRounds) {
+                val standings = hashMapOf<String, Int>()
+                tournament.participants.forEach {
+                    standings[it.id] = 0
+                }
+                tournament.rounds.add(standings)
+            }
+        } else { // Single Elimination
+            tournament = TournamentOperations.generateBracket(tournament, matchRepository)
+        }
+
+        tournamentRepository.save(tournament)
+
+        if (tournament.token.tokenVersion == 0) {
+            tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
+        }
+
+        return tournament
     }
 
     private fun getCurrentUser(): UserPrincipal {
