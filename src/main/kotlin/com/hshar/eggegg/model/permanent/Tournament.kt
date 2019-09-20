@@ -43,7 +43,7 @@ data class Tournament(
         val prizeDistribution: ArrayList<Int>,
         var winners: MutableList<String>,
         @DBRef var game: Game,
-        @DBRef val participants: ArrayList<User>,
+        @DBRef val participants: MutableSet<User>,
         @DBRef override val matches: ArrayList<Match>,
         var featured: Boolean = false,
         var coverImage: String = "https://s3.amazonaws.com/eggegg-imgs/cover.png",

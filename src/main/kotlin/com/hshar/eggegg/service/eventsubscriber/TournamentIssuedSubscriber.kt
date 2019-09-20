@@ -78,7 +78,7 @@ class TournamentIssuedSubscriber(
                     rounds = arrayListOf(),
                     pointsDistribution = dataObj.pointsDistribution,
                     pointsToWin = dataObj.pointsToWin,
-                    participants = arrayListOf(),
+                    participants = mutableSetOf(),
                     game = game,
                     matches = arrayListOf(),
                     description = dataObj.description,

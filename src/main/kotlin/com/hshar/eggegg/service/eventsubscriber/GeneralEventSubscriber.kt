@@ -42,7 +42,7 @@ abstract class GeneralEventSubscriber<T> : DisposableSubscriber<T>() {
     }
 
     protected fun beforeNext(transactionHash: String) {
-        if (web3DataRepository.existsById(transactionHash)) {
+        if (eventDataRepository.existsById(transactionHash)) {
             throw Error("Already processed.")
         }
     }

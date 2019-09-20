@@ -32,7 +32,7 @@ class TournamentFinalizedSubscriber(
                     )
 
             tournament.winners = eventData._winners
-            tournament.tournamentStatus = TournamentStatus.FINISHED
+            tournament.tournamentStatus = TournamentStatus.COMPLETE
             if (tournament.matches.isNotEmpty()) {
                 val match = tournament.matches.last()
 

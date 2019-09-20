@@ -5,6 +5,7 @@ import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.exception.UnauthorizedException
 import com.hshar.eggegg.model.permanent.Match
+import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.model.permanent.Tournament
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.model.transient.type.BracketType
@@ -15,12 +16,14 @@ import com.hshar.eggegg.repository.MatchRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.hshar.eggegg.security.UserPrincipal
+import com.hshar.eggegg.service.NotificationService
 import findOne
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
+import java.util.*
 
 @Service
 class TournamentMutation : GraphQLMutationResolver {
@@ -33,6 +36,9 @@ class TournamentMutation : GraphQLMutationResolver {
 
     @Autowired
     lateinit var matchRepository: MatchRepository
+
+    @Autowired
+    lateinit var notificationService: NotificationService
 
     private val logger = KotlinLogging.logger {}
 
@@ -136,6 +142,13 @@ class TournamentMutation : GraphQLMutationResolver {
                         ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
                 tournament.winners.add(winner.publicAddress)
             }
+            notificationService.newNotification(Notification(
+                    id = UUID.randomUUID().toString(),
+                    user = tournament.owner,
+                    url = "/tournament/${tournament.id}",
+                    message = "${tournament.name} Finished, please issue payments now!",
+                    createdAt = Date()
+            ))
         }
 
         return tournamentRepository.save(tournament)
