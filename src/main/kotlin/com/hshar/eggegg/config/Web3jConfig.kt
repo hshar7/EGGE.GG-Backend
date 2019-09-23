@@ -20,7 +20,7 @@ class Web3jConfig {
     fun web3jProvider(): Web3j {
 
         val wssService = EggWebSocketService(
-                WebSocketClient(URI("wss://mainnet.infura.io/ws")),
+                WebSocketClient(URI("wss://mainnet.infura.io/ws/v3/1703c01ec0814e7796155ff061b350a1")),
                 applicationEventPublisher,
                 true
         )
