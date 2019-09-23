@@ -29,7 +29,7 @@ final class EventListenerService @Autowired constructor(
         private val web3j: Web3j
 ) {
     companion object {
-        const val CONTRACT_ADDRESS = "0x122d572ca836fac993706238d37732e2cafabad9"
+        const val CONTRACT_ADDRESS = "0xe1d554a32ab86d6277546bfa6a8f2085e355f5bc"
         const val GAS_PRICE = 200
         const val GAS_LIMIT = 4500000
     }
