@@ -81,6 +81,10 @@ val WoW = org.bson.Document("name", "World of Warcraft")
 WoW["url"] = "https://s3.us-east-2.amazonaws.com/eggegg-images/games/world-of-warcraft.jpg"
 WoW["_id"] = "dd0dfa0a-f0e2-4aa1-a05c-b61fe6d6b12a"
 games.add(WoW)
+val dota_underlords = org.bson.Document("name", "Dota Underlords")
+dota_underlords["url"] = "https://eggegg-imgs.s3.amazonaws.com/games/Dota_Underlords.jpg"
+dota_underlords["_id"] = "c8155b3a-2ee7-43da-b5ea-72f5fe79c6c2"
+games.add(dota_underlords)
 
 games.forEach{ game ->
     game.append("createdAt", Date())
