@@ -42,6 +42,7 @@ data class Tournament(
         val maxPlayers: Int,
         val prizeDistribution: ArrayList<Int>,
         var winners: MutableList<String>,
+        var eventDataWinners: MutableList<String> = mutableListOf(),
         @DBRef var game: Game,
         @DBRef val participants: MutableSet<User>,
         @DBRef override val matches: ArrayList<Match>,

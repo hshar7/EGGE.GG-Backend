@@ -71,6 +71,7 @@ class TournamentIssuedSubscriber(
                     maxPlayers = eventData._maxPlayers.toInt(),
                     prizeDistribution = prizeDistInts,
                     winners = mutableListOf(),
+                    eventDataWinners = mutableListOf(),
                     token = token,
                     prize = 0.toBigDecimal(),
                     buyInFee = dataObj.buyInFee ?: 0.toBigDecimal(),

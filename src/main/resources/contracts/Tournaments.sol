@@ -1,4 +1,4 @@
-pragma solidity 0.5.7;
+pragma solidity 0.5.11;
 
 import "./inherited/ERC20Token.sol";
 import "./inherited/ERC721Basic.sol";

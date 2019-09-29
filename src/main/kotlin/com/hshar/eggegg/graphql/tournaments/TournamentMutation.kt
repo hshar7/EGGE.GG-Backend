@@ -137,7 +137,7 @@ class TournamentMutation : GraphQLMutationResolver {
         }
 
         if (tournament.tournamentStatus == TournamentStatus.FINISHED) {
-            totals.toSortedMap().forEach { (userId, _) ->
+            totals.toList().sortedBy { (_, value) -> value }.reversed().toMap().forEach { (userId, _) ->
                 val winner = userRepository.findOne(userId)
                         ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
                 tournament.winners.add(winner.publicAddress)
