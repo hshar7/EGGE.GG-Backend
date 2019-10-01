@@ -1,5 +1,6 @@
 package com.hshar.eggegg.service
 
+import com.hshar.eggegg.contract.Tournaments
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.web3j.protocol.Web3j
@@ -7,15 +8,15 @@ import org.web3j.protocol.core.DefaultBlockParameter
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.tx.ReadonlyTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
-import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.repository.*
 import com.hshar.eggegg.service.eventsubscriber.*
 import findOne
 import io.reactivex.subscribers.DisposableSubscriber
 import org.apache.commons.collections4.collection.SynchronizedCollection
-
+import org.springframework.boot.context.properties.ConfigurationProperties
 
 @Service
+@ConfigurationProperties(prefix = "web3")
 final class EventListenerService @Autowired constructor(
         private val userRepository: UserRepository,
         private val gameRepository: GameRepository,
@@ -28,11 +29,9 @@ final class EventListenerService @Autowired constructor(
         private val eventRetryDataRepository: EventRetryDataRepository,
         private val web3j: Web3j
 ) {
-    companion object {
-        const val CONTRACT_ADDRESS = "0xe1d554a32ab86d6277546bfa6a8f2085e355f5bc"
-        const val GAS_PRICE = 200
-        const val GAS_LIMIT = 4500000
-    }
+    lateinit var contractAddress: String
+    lateinit var gasPrice: String
+    lateinit var gasLimit: String
 
     private val subscribers: SynchronizedCollection<DisposableSubscriber<out Any>> =
             SynchronizedCollection.synchronizedCollection(arrayListOf())
@@ -46,10 +45,10 @@ final class EventListenerService @Autowired constructor(
     fun initSubscribers() {
 
         val transactionManager = ReadonlyTransactionManager(web3j, "0x0")
-        val gasProvider = StaticGasProvider(GAS_PRICE.toBigInteger(), GAS_LIMIT.toBigInteger())
+        val gasProvider = StaticGasProvider(gasPrice.toBigInteger(), gasLimit.toBigInteger())
 
         val tournamentsContract = Tournaments.load(
-                CONTRACT_ADDRESS,
+                contractAddress,
                 web3j,
                 transactionManager,
                 gasProvider

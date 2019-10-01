@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 import java.util.Date
 
 @Component
-@ConfigurationProperties(prefix = "app")
+@ConfigurationProperties(prefix = "security")
 class JwtTokenProvider {
     companion object : KLogging()
 
@@ -26,6 +26,8 @@ class JwtTokenProvider {
 
         val now = Date()
         val expiryDate = Date(now.time + jwtExpirationInMs.toInt())
+
+        println(expiryDate.toString())
 
         return Jwts.builder()
                 .setSubject(userPrincipal.id.toString())

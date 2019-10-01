@@ -135,6 +135,8 @@ class TournamentMutation : GraphQLMutationResolver {
                 }
             }
         }
+        // Check for final round
+        if (roundNumber >= tournament.numberOfRounds) tournament.tournamentStatus = TournamentStatus.FINISHED
 
         if (tournament.tournamentStatus == TournamentStatus.FINISHED) {
             totals.toList().sortedBy { (_, value) -> value }.reversed().toMap().forEach { (userId, _) ->
