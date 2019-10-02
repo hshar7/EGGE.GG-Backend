@@ -13,6 +13,7 @@ import com.hshar.eggegg.service.eventsubscriber.*
 import findOne
 import io.reactivex.subscribers.DisposableSubscriber
 import org.apache.commons.collections4.collection.SynchronizedCollection
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @Service
@@ -27,12 +28,11 @@ final class EventListenerService @Autowired constructor(
         private val web3DataRepository: Web3DataRepository,
         private val eventDataRepository: EventDataRepository,
         private val eventRetryDataRepository: EventRetryDataRepository,
-        private val web3j: Web3j
+        private val web3j: Web3j,
+        @Value("\${web3.contractAddress}") val contractAddress: String,
+        @Value("\${web3.gasPrice}") val gasPrice: String,
+        @Value("\${web3.gasLimit}") val gasLimit: String
 ) {
-    lateinit var contractAddress: String
-    lateinit var gasPrice: String
-    lateinit var gasLimit: String
-
     private val subscribers: SynchronizedCollection<DisposableSubscriber<out Any>> =
             SynchronizedCollection.synchronizedCollection(arrayListOf())
 

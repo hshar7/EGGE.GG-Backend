@@ -7,12 +7,15 @@ import com.github.salomonbrys.kotson.get
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.hshar.eggegg.repository.TokenRepository
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Component
-class ScheduledTasks {
+@Service
+class TokenPricesCronTask {
+
+    protected val logger = KotlinLogging.logger {}
 
     @Autowired
     lateinit var tokenRepository: TokenRepository
@@ -32,7 +35,7 @@ class ScheduledTasks {
                         val resultObject = Gson().fromJson<JsonObject>(result.get())
                         if (resultObject["price"] != null) {
                             token.usdPrice = resultObject["price"]["rate"].asFloat
-                            println("Updated token ${token.symbol} price to ${token.usdPrice}")
+                            logger.info("Updated token ${token.symbol} price to ${token.usdPrice}")
                             tokenRepository.save(token)
                         }
                     }
@@ -47,7 +50,7 @@ class ScheduledTasks {
                     is Result.Success -> {
                         val resultObject = Gson().fromJson<JsonObject>(result.get())
                         token.usdPrice = resultObject["data"]["priceUsd"].asFloat
-                        println("Updated ETH price to ${token.usdPrice}")
+                        logger.info("Updated ETH price to ${token.usdPrice}")
                         tokenRepository.save(token)
                     }
                 }

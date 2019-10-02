@@ -31,7 +31,9 @@ class TournamentFinalizedSubscriber(
                             tournamentRepository.className(), "tournamentId", eventData._tournamentId
                     )
 
-            tournament.eventDataWinners = eventData._winners
+            for (d: Address in eventData._winners as List<Address>) {
+                tournament.eventDataWinners.add(d.toString())
+            }
             tournament.tournamentStatus = TournamentStatus.COMPLETE
             if (tournament.matches.isNotEmpty()) {
                 val match = tournament.matches.last()
