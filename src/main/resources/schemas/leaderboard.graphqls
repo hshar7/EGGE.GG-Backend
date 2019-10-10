@@ -1,0 +1,11 @@
+type LeaderboardItem {
+    id: String!
+    userId: String!
+    userName: String
+    userPublicAddress: String!
+    earningsUSD: Float!
+}
+
+extend type Query {
+    leaderboard: [LeaderboardItem]
+}
