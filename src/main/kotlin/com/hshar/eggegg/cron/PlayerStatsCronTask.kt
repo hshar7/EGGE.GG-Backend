@@ -4,6 +4,7 @@ import com.hshar.eggegg.model.permanent.redis.Leaderboard
 import com.hshar.eggegg.repository.LeaderboardRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -15,6 +16,9 @@ class PlayerStatsCronTask @Autowired constructor(
         val userRepository: UserRepository,
         val leaderboardRepository: LeaderboardRepository
 ) {
+
+    protected val logger = KotlinLogging.logger {}
+
     @Scheduled(fixedRate = 86400000)
     fun updateTokenPrices() {
         userRepository.findAll().forEach { user ->
@@ -34,7 +38,7 @@ class PlayerStatsCronTask @Autowired constructor(
                                     userId = user.id,
                                     userName = user.name,
                                     avatar = user.avatar,
-                                    organizationName = if (user.organization != null) user.organization!!.name else "None",
+                                    organizationName = "None",
                                     userPublicAddress = user.publicAddress,
                                     earningsUSD = prizeUsd
                             ))
@@ -44,5 +48,6 @@ class PlayerStatsCronTask @Autowired constructor(
                 }
             }
         }
+        logger.info("Updated leaderboard.")
     }
 }
