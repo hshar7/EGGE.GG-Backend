@@ -22,30 +22,31 @@ class PlayerStatsCronTask @Autowired constructor(
     @Scheduled(fixedRate = 86400000)
     fun updateTokenPrices() {
         userRepository.findAll().forEach { user ->
+            var totalPrize = 0.toFloat()
             tournamentRepository.findAll().forEach { tour ->
                 var i = 1
                 tour.eventDataWinners.forEach { winnerAddress ->
                     if (winnerAddress == user.publicAddress) {
                         val prizeCut = tour.prizeDistribution[i - 1]
                         var prize = tour.prize * prizeCut.toBigDecimal() / 100.toBigDecimal()
-                        if (prize > 0.toBigDecimal()) {
-                            if (tour.token.tokenVersion == 0)
-                                prize = Convert.fromWei(prize, Convert.Unit.ETHER)
+                        if (tour.token.tokenVersion == 0)
+                            prize = Convert.fromWei(prize, Convert.Unit.ETHER)
 
-                            val prizeUsd = prize.toFloat() * tour.token.usdPrice
-                            leaderboardRepository.save(Leaderboard(
-                                    id = user.id,
-                                    userId = user.id,
-                                    userName = user.name,
-                                    avatar = user.avatar,
-                                    organizationName = "None",
-                                    userPublicAddress = user.publicAddress,
-                                    earningsUSD = prizeUsd
-                            ))
-                        }
+                        totalPrize += prize.toFloat() * tour.token.usdPrice
                     }
                     i++
                 }
+            }
+            if (totalPrize > 0) {
+                leaderboardRepository.save(Leaderboard(
+                        id = user.id,
+                        userId = user.id,
+                        userName = user.name,
+                        avatar = user.avatar,
+                        organizationName = "None", // TODO: Fix up lazy loading of DBREF
+                        userPublicAddress = user.publicAddress,
+                        earningsUSD = totalPrize
+                ))
             }
         }
         logger.info("Updated leaderboard.")
