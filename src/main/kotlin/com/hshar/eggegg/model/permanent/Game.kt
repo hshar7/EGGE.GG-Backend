@@ -1,4 +1,4 @@
-package com.hshar.eggegg.model.permanent.mongo
+package com.hshar.eggegg.model.permanent
 
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate

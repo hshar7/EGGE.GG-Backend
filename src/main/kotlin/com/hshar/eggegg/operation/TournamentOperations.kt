@@ -1,8 +1,8 @@
 package com.hshar.eggegg.operation
 
-import com.hshar.eggegg.model.permanent.mongo.Match
-import com.hshar.eggegg.model.permanent.mongo.Tournament
-import com.hshar.eggegg.model.permanent.mongo.User
+import com.hshar.eggegg.model.permanent.Match
+import com.hshar.eggegg.model.permanent.Tournament
+import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.repository.MatchRepository
 import java.util.*
 

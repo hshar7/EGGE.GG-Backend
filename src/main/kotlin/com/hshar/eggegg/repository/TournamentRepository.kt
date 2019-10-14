@@ -1,6 +1,6 @@
 package com.hshar.eggegg.repository
 
-import com.hshar.eggegg.model.permanent.mongo.Tournament
+import com.hshar.eggegg.model.permanent.Tournament
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.repository.MongoRepository

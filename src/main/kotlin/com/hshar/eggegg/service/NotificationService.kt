@@ -1,6 +1,6 @@
 package com.hshar.eggegg.service
 
-import com.hshar.eggegg.model.permanent.mongo.Notification
+import com.hshar.eggegg.model.permanent.Notification
 import com.hshar.eggegg.repository.NotificationRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking

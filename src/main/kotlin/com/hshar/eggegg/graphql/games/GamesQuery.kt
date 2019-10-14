@@ -2,7 +2,7 @@ package com.hshar.eggegg.graphql.games
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.mongo.Game
+import com.hshar.eggegg.model.permanent.Game
 import com.hshar.eggegg.repository.GameRepository
 import findOne
 import org.springframework.beans.factory.annotation.Autowired
