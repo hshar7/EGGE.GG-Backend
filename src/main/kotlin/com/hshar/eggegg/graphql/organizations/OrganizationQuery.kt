@@ -2,7 +2,7 @@ package com.hshar.eggegg.graphql.organizations
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.Organization
+import com.hshar.eggegg.model.permanent.mongo.Organization
 import com.hshar.eggegg.repository.OrganizationRepository
 import findOne
 import org.springframework.beans.factory.annotation.Autowired

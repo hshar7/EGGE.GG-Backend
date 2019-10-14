@@ -2,7 +2,7 @@ package com.hshar.eggegg.graphql.users
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.mongo.User
 import com.hshar.eggegg.repository.OrganizationRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.hshar.eggegg.security.UserPrincipal

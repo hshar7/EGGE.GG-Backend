@@ -1,4 +1,4 @@
-package com.hshar.eggegg.model.permanent
+package com.hshar.eggegg.model.permanent.redis
 
 import org.springframework.data.redis.core.RedisHash
 
@@ -7,6 +7,8 @@ data class Leaderboard (
         val id: String,
         val userId: String,
         var userName: String,
+        var avatar: String,
+        var organizationName: String,
         val userPublicAddress: String,
         var earningsUSD: Float
 )

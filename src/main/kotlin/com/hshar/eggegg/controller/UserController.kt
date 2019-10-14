@@ -5,7 +5,7 @@ import com.hshar.eggegg.repository.UserRepository
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.mongo.User
 import com.hshar.eggegg.model.transient.payload.JwtAuthenticationResponse
 import com.hshar.eggegg.security.CurrentUser
 import com.hshar.eggegg.security.JwtTokenProvider

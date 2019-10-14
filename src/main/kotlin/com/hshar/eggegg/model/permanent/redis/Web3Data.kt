@@ -1,4 +1,4 @@
-package com.hshar.eggegg.model.permanent
+package com.hshar.eggegg.model.permanent.redis
 
 import org.springframework.data.redis.core.RedisHash
 import java.math.BigInteger

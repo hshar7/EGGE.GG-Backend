@@ -1,8 +1,8 @@
 package com.hshar.eggegg.service.eventsubscriber
 
-import com.hshar.eggegg.model.permanent.EventData
-import com.hshar.eggegg.model.permanent.EventRetryData
-import com.hshar.eggegg.model.permanent.Web3Data
+import com.hshar.eggegg.model.permanent.redis.EventData
+import com.hshar.eggegg.model.permanent.redis.EventRetryData
+import com.hshar.eggegg.model.permanent.redis.Web3Data
 import com.hshar.eggegg.repository.EventDataRepository
 import com.hshar.eggegg.repository.EventRetryDataRepository
 import com.hshar.eggegg.repository.Web3DataRepository

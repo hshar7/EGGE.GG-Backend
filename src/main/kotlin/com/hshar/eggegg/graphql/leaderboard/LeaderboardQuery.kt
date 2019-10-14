@@ -1,7 +1,7 @@
 package com.hshar.eggegg.graphql.leaderboard
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
-import com.hshar.eggegg.model.permanent.Leaderboard
+import com.hshar.eggegg.model.permanent.redis.Leaderboard
 import com.hshar.eggegg.repository.LeaderboardRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

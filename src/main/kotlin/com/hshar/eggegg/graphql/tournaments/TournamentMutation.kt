@@ -4,10 +4,10 @@ import className
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.exception.UnauthorizedException
-import com.hshar.eggegg.model.permanent.Match
-import com.hshar.eggegg.model.permanent.Notification
-import com.hshar.eggegg.model.permanent.Tournament
-import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.mongo.Match
+import com.hshar.eggegg.model.permanent.mongo.Notification
+import com.hshar.eggegg.model.permanent.mongo.Tournament
+import com.hshar.eggegg.model.permanent.mongo.User
 import com.hshar.eggegg.model.transient.type.BracketType
 import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.model.transient.type.TournamentType

@@ -1,5 +1,6 @@
-package com.hshar.eggegg.model.permanent
+package com.hshar.eggegg.model.permanent.mongo
 
+import com.hshar.eggegg.model.permanent.mongo.AbstractOrganization
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed

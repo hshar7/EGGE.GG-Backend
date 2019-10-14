@@ -1,6 +1,6 @@
 package com.hshar.eggegg.cron
 
-import com.hshar.eggegg.model.permanent.Leaderboard
+import com.hshar.eggegg.model.permanent.redis.Leaderboard
 import com.hshar.eggegg.repository.LeaderboardRepository
 import com.hshar.eggegg.repository.TournamentRepository
 import com.hshar.eggegg.repository.UserRepository
@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.web3j.utils.Convert
-import java.util.*
 
 @Service
 class PlayerStatsCronTask @Autowired constructor(
@@ -25,7 +24,7 @@ class PlayerStatsCronTask @Autowired constructor(
                     if (winnerAddress == user.publicAddress) {
                         val prizeCut = tour.prizeDistribution[i - 1]
                         var prize = tour.prize * prizeCut.toBigDecimal() / 100.toBigDecimal()
-                        if (prize >= 0.toBigDecimal()) {
+                        if (prize > 0.toBigDecimal()) {
                             if (tour.token.tokenVersion == 0)
                                 prize = Convert.fromWei(prize, Convert.Unit.ETHER)
 
@@ -34,6 +33,8 @@ class PlayerStatsCronTask @Autowired constructor(
                                     id = user.id,
                                     userId = user.id,
                                     userName = user.name,
+                                    avatar = user.avatar,
+                                    organizationName = if (user.organization != null) user.organization!!.name else "None",
                                     userPublicAddress = user.publicAddress,
                                     earningsUSD = prizeUsd
                             ))

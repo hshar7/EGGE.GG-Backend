@@ -1,6 +1,6 @@
 package com.hshar.eggegg.controller
 
-import com.hshar.eggegg.model.permanent.Game
+import com.hshar.eggegg.model.permanent.mongo.Game
 import com.hshar.eggegg.repository.GameRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping

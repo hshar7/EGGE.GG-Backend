@@ -2,8 +2,8 @@ package com.hshar.eggegg.service.eventsubscriber
 
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.Tournament
-import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.mongo.Tournament
+import com.hshar.eggegg.model.permanent.mongo.User
 import com.hshar.eggegg.model.transient.type.TournamentType
 import com.hshar.eggegg.operation.TournamentOperations
 import com.hshar.eggegg.repository.*

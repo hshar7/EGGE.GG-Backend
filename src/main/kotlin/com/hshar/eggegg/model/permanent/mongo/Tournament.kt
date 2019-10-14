@@ -1,4 +1,4 @@
-package com.hshar.eggegg.model.permanent
+package com.hshar.eggegg.model.permanent.mongo
 
 import com.hshar.eggegg.model.transient.type.BracketType
 import com.hshar.eggegg.model.transient.type.TournamentFormat

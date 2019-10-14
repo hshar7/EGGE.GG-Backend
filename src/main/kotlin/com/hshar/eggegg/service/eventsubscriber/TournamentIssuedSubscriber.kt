@@ -4,9 +4,9 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.Gson
 import com.hshar.eggegg.contract.Tournaments
 import com.hshar.eggegg.exception.ResourceNotFoundException
-import com.hshar.eggegg.model.permanent.Notification
-import com.hshar.eggegg.model.permanent.Tournament
-import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.permanent.mongo.Notification
+import com.hshar.eggegg.model.permanent.mongo.Tournament
+import com.hshar.eggegg.model.permanent.mongo.User
 import com.hshar.eggegg.model.transient.payload.IpfsSchema
 import com.hshar.eggegg.model.transient.type.TournamentStatus
 import com.hshar.eggegg.repository.*

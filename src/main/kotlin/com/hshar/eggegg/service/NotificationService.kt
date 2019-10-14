@@ -1,6 +1,6 @@
 package com.hshar.eggegg.service
 
-import com.hshar.eggegg.model.permanent.Notification
+import com.hshar.eggegg.model.permanent.mongo.Notification
 import com.hshar.eggegg.repository.NotificationRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Service
-import java.lang.Thread.sleep
 
 @Service
 @Controller
