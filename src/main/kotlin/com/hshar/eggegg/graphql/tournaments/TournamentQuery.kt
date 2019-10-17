@@ -25,9 +25,7 @@ class TournamentQuery : GraphQLQueryResolver {
 
     fun getTournament(id: String): Tournament {
         val tournament = tournamentRepository.findOne(id) ?: throw ResourceNotFoundException("Tournament", "id", id)
-        if (tournament.token.tokenVersion == 0) {
-            tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
-        }
+        tournament.prize = Convert.fromWei(tournament.prize, Convert.Unit.ETHER)
         return tournament
     }
 

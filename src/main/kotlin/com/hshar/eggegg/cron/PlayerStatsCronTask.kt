@@ -28,9 +28,7 @@ class PlayerStatsCronTask @Autowired constructor(
                 tour.eventDataWinners.forEach { winnerAddress ->
                     if (winnerAddress == user.publicAddress) {
                         val prizeCut = tour.prizeDistribution[i - 1]
-                        var prize = tour.prize * prizeCut.toBigDecimal() / 100.toBigDecimal()
-                        if (tour.token.tokenVersion == 0)
-                            prize = Convert.fromWei(prize, Convert.Unit.ETHER)
+                        val prize = Convert.fromWei(tour.prize, Convert.Unit.ETHER) * prizeCut.toBigDecimal() / 100.toBigDecimal()
 
                         totalPrize += prize.toFloat() * tour.token.usdPrice
                     }
