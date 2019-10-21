@@ -1,5 +1,6 @@
 package com.hshar.eggegg.controller
 
+import className
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.repository.UserRepository
 import com.github.salomonbrys.kotson.fromJson
@@ -12,21 +13,20 @@ import com.hshar.eggegg.security.JwtTokenProvider
 import com.hshar.eggegg.security.UserPrincipal
 import com.hshar.eggegg.service.S3AwsService
 import findOne
-import org.apache.commons.codec.binary.Hex
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.web3j.crypto.Keys
-import org.web3j.crypto.Hash
-import org.web3j.crypto.Sign
-import org.web3j.crypto.Sign.SignatureData
-import org.web3j.utils.Numeric
 import java.util.*
+import org.web3j.crypto.Wallet
+import org.web3j.crypto.Keys
+import org.springframework.boot.configurationprocessor.json.JSONObject
+
 
 @RestController
 @RequestMapping("/api")
@@ -44,34 +44,72 @@ class UserController {
     @Autowired
     lateinit var s3AwsService: S3AwsService
 
-    @PostMapping("/user")
-    fun createOrLoginUser(@RequestBody requestBody: String): ResponseEntity<JwtAuthenticationResponse> {
-        val signUpRequest = Gson().fromJson<JsonObject>(requestBody)
-        if (!verifyAddressFromSignature(signUpRequest["accountAddress"].asString, signUpRequest["signature"].asString)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
-        val user = userRepository.findByPublicAddress(signUpRequest["accountAddress"].asString)
-                ?: userRepository.insert(User(
-                        id = UUID.randomUUID().toString(),
-                        publicAddress = signUpRequest["accountAddress"].asString,
-                        organization = null,
-                        createdAt = Date(),
-                        updatedAt = Date()
-                ))
+    @Autowired
+    lateinit var passwordEncoder: PasswordEncoder
 
+    @GetMapping("/user")
+    fun getUser(@RequestParam("id", required = false) userId: String?,
+                @RequestParam("username", required = false) username: String?,
+                @CurrentUser currentUser: UserPrincipal): User {
+        if (userId != null) {
+            return userRepository.findOne(userId)
+                    ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
+        } else if (username != null) {
+            return userRepository.findByUsername(username)
+                    ?: throw ResourceNotFoundException(userRepository.className(), "username", username)
+        } else {
+            return userRepository.findOne(currentUser.getId())
+                    ?: throw ResourceNotFoundException(userRepository.className(), "id", currentUser.getId())
+        }
+    }
+
+    @PostMapping("/user")
+    fun createUser(@RequestBody requestBody: String): ResponseEntity<User> {
+        val signUpRequest = Gson().fromJson<JsonObject>(requestBody)
+        val password = passwordEncoder.encode(signUpRequest["password"].asString)
+
+        // Create a wallet
+        val processJson = JSONObject()
+
+        val ecKeyPair = Keys.createEcKeyPair()
+        val privateKeyInDec = ecKeyPair.privateKey
+
+        val sPrivatekeyInHex = privateKeyInDec.toString(16)
+
+        val aWallet = Wallet.createLight(UUID.randomUUID().toString(), ecKeyPair)
+        val sAddress = aWallet.address
+
+        processJson.put("address", "0x$sAddress")
+        processJson.put("privatekey", sPrivatekeyInHex)
+
+        val user = userRepository.insert(User(
+                id = UUID.randomUUID().toString(),
+                username = signUpRequest["username"].asString,
+                password = password,
+                publicAddress = "0x$sAddress",
+                organization = null,
+                privateKey = sPrivatekeyInHex,
+                createdAt = Date(),
+                updatedAt = Date()
+        ))
+
+        // Give it tokens
+
+        return ResponseEntity.ok(user)
+    }
+
+    @PostMapping("/user/login")
+    fun authenticateUser(@RequestBody requestBody: String): ResponseEntity<JwtAuthenticationResponse> {
+        val loginRequest = Gson().fromJson<JsonObject>(requestBody)
         val authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(
-                        signUpRequest["accountAddress"].asString, ""
+                        loginRequest["username"], loginRequest["password"]
                 )
         )
 
         SecurityContextHolder.getContext().authentication = authentication
-        val jwtResponse = JwtAuthenticationResponse(jwtTokenProvider.generateToken(authentication))
-        jwtResponse.userId = user.id
-        jwtResponse.publicAddress = user.publicAddress
-        jwtResponse.userName = user.name
-        jwtResponse.userAvatar = user.avatar
-        return ResponseEntity.ok(jwtResponse)
+        val jwt = jwtTokenProvider.generateToken(authentication)
+        return ResponseEntity.ok(JwtAuthenticationResponse(jwt))
     }
 
     @PostMapping("/user/myAvatar")
@@ -79,10 +117,10 @@ class UserController {
             @RequestParam("file") file: MultipartFile,
             @CurrentUser userPrincipal: UserPrincipal
     ): ResponseEntity<String> {
-        val user = userRepository.findOne(userPrincipal.id)
-                ?: throw ResourceNotFoundException("User", "id", userPrincipal.id)
+        val user = userRepository.findOne(userPrincipal.getId())
+                ?: throw ResourceNotFoundException("User", "id", userPrincipal.getId())
 
-        val fullFileName = "users/${userPrincipal.id}/${file.originalFilename}"
+        val fullFileName = "users/${userPrincipal.getId()}/${file.originalFilename}"
         val url = "https://s3.us-east-1.amazonaws.com/eggegg-imgs/$fullFileName"
 
         when (s3AwsService.putObject(fullFileName, file)) {
@@ -93,29 +131,5 @@ class UserController {
             }
             false -> return ResponseEntity("{\"status\": \"failed\"}", HttpStatus.INTERNAL_SERVER_ERROR)
         }
-    }
-
-    private fun verifyAddressFromSignature(address: String, signature: String): Boolean {
-        val messageHashed = Hash.sha3(Hex.encodeHexString("hello world".toByteArray()))
-        val messageHashBytes = Numeric.hexStringToByteArray(messageHashed)
-        val signPrefix = ("\u0019Ethereum Signed Message:\n32").toByteArray()
-        val r = signature.substring(0, 66)
-        val s = signature.substring(66, 130)
-        val v = "0x" + signature.substring(130, 132)
-
-        val msgBytes = ByteArray(signPrefix.size + messageHashBytes.size)
-        val prefixBytes = signPrefix
-
-        System.arraycopy(prefixBytes, 0, msgBytes, 0, prefixBytes.size)
-        System.arraycopy(messageHashBytes, 0, msgBytes, prefixBytes.size, messageHashBytes.size)
-
-        val pubkey = Sign.signedMessageToKey(msgBytes,
-                SignatureData(Numeric.hexStringToByteArray(v)[0],
-                        Numeric.hexStringToByteArray(r),
-                        Numeric.hexStringToByteArray(s)))
-                .toString(16)
-
-        val recoveredAddress = "0x" + Keys.getAddress(pubkey)
-        return address == recoveredAddress
     }
 }

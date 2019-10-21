@@ -16,17 +16,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-
-inline class NoPasswordEncoder(val password: String) : PasswordEncoder {
-    override fun encode(charSequence: CharSequence): String {
-        return charSequence.toString()
-    }
-
-    override fun matches(charSequence: CharSequence, s: String): Boolean {
-        return charSequence.toString() == s
-    }
-}
 
 @Configuration
 @EnableWebSecurity
@@ -58,7 +49,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
-        return NoPasswordEncoder("")
+        return BCryptPasswordEncoder()
     }
 
     override fun configure(http: HttpSecurity) {

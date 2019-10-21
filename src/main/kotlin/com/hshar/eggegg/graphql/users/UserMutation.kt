@@ -19,8 +19,8 @@ class UserMutation : GraphQLMutationResolver {
     private val logger = KotlinLogging.logger {}
 
     fun metadata(metadata: UserInput): User {
-        val user = userRepository.findOne(getCurrentUser().id)
-                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().id)
+        val user = userRepository.findOne(getCurrentUser().getId())
+                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().getId())
         user.name = metadata.name ?: user.name
         user.email = metadata.email ?: user.email
 

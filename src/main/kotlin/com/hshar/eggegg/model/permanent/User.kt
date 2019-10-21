@@ -1,6 +1,5 @@
 package com.hshar.eggegg.model.permanent
 
-import com.hshar.eggegg.model.permanent.AbstractOrganization
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed
@@ -12,7 +11,10 @@ import java.util.*
 data class User(
         val id: String,
         @Indexed(unique = true) val publicAddress: String,
+        @Indexed(unique = true) var username: String,
+        var privateKey: String,
         var name: String = "",
+        var password: String,
         var email: String = "",
         var summary: String = "",
         @DBRef(lazy = true) var organization: AbstractOrganization?,

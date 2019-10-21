@@ -25,8 +25,8 @@ class UserQuery : GraphQLQueryResolver {
     }
 
     fun myProfile(): User {
-        return userRepository.findOne(getCurrentUser().id)
-                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().id)
+        return userRepository.findOne(getCurrentUser().getId())
+                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().getId())
     }
 
     fun usersByOrganization(organizationId: String): List<User> {

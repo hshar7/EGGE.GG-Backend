@@ -8,14 +8,18 @@ import java.util.ArrayList
 import java.util.Objects
 
 class UserPrincipal private constructor(
-        val id: String,
+        private val id: String,
+        private val username: String,
         val name: String,
         @field:JsonIgnore
-        val email: String,
-        private val username: String,
+        private val email: String,
         @field:JsonIgnore
         private val password: String,
         private val authorities: Collection<GrantedAuthority>) : UserDetails {
+
+    fun getId(): String {
+        return id
+    }
 
     override fun getUsername(): String {
         return username
@@ -23,6 +27,10 @@ class UserPrincipal private constructor(
 
     override fun getPassword(): String {
         return password
+    }
+
+    fun getEmail(): String {
+        return email
     }
 
     override fun isAccountNonExpired(): Boolean {
@@ -58,14 +66,13 @@ class UserPrincipal private constructor(
     }
 
     companion object {
-
         fun create(user: User): UserPrincipal {
             return UserPrincipal(
                     user.id,
+                    user.username,
                     user.name,
                     user.email,
-                    user.publicAddress,
-                    "",
+                    user.password,
                     ArrayList()
             )
         }
