@@ -23,10 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
-import org.web3j.crypto.Wallet
-import org.web3j.crypto.Keys
-import org.springframework.boot.configurationprocessor.json.JSONObject
-
 
 @RestController
 @RequestMapping("/api")
@@ -61,41 +57,6 @@ class UserController {
             return userRepository.findOne(currentUser.getId())
                     ?: throw ResourceNotFoundException(userRepository.className(), "id", currentUser.getId())
         }
-    }
-
-    @PostMapping("/user")
-    fun createUser(@RequestBody requestBody: String): ResponseEntity<User> {
-        val signUpRequest = Gson().fromJson<JsonObject>(requestBody)
-        val password = passwordEncoder.encode(signUpRequest["password"].asString)
-
-        // Create a wallet
-        val processJson = JSONObject()
-
-        val ecKeyPair = Keys.createEcKeyPair()
-        val privateKeyInDec = ecKeyPair.privateKey
-
-        val sPrivatekeyInHex = privateKeyInDec.toString(16)
-
-        val aWallet = Wallet.createLight(UUID.randomUUID().toString(), ecKeyPair)
-        val sAddress = aWallet.address
-
-        processJson.put("address", "0x$sAddress")
-        processJson.put("privatekey", sPrivatekeyInHex)
-
-        val user = userRepository.insert(User(
-                id = UUID.randomUUID().toString(),
-                username = signUpRequest["username"].asString,
-                password = password,
-                publicAddress = "0x$sAddress",
-                organization = null,
-                privateKey = sPrivatekeyInHex,
-                createdAt = Date(),
-                updatedAt = Date()
-        ))
-
-        // Give it tokens
-
-        return ResponseEntity.ok(user)
     }
 
     @PostMapping("/user/login")

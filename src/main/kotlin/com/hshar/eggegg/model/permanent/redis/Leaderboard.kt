@@ -8,7 +8,6 @@ data class Leaderboard (
         val userId: String,
         var userName: String,
         var avatar: String,
-        var organizationName: String,
         val userPublicAddress: String,
         var earningsUSD: Float
 )

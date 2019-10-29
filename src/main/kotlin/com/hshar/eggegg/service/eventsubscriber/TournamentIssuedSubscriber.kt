@@ -41,10 +41,9 @@ class TournamentIssuedSubscriber(
             val user = userRepository.findByPublicAddress(eventData._organizer) ?: userRepository.insert(User(
                     id = UUID.randomUUID().toString(),
                     publicAddress = eventData._organizer,
-                    organization = null,
-                    username = "123",
-                    privateKey = "123",
-                    password = "123", // TODO: These need proper values.. whole thing needs rework.
+                    username = eventData._organizer,
+                    email = eventData._organizer,
+                    password = "", // TODO: These need proper values.. whole thing needs rework.
                     createdAt = Date(),
                     updatedAt = Date()
             ))

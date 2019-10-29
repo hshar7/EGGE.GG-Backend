@@ -41,7 +41,6 @@ class PlayerStatsCronTask @Autowired constructor(
                         userId = user.id,
                         userName = user.name,
                         avatar = user.avatar,
-                        organizationName = "None", // TODO: Fix up lazy loading of DBREF
                         userPublicAddress = user.publicAddress,
                         earningsUSD = totalPrize
                 ))

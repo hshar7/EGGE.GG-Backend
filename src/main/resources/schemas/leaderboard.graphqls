@@ -2,7 +2,6 @@ type LeaderboardItem {
     id: String!
     userId: String!
     userName: String!
-    organizationName: String!
     avatar: String!
     userPublicAddress: String!
     earningsUSD: Float!

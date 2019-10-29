@@ -3,22 +3,24 @@ package com.hshar.eggegg.graphql.users
 import com.coxautodev.graphql.tools.GraphQLQueryResolver
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.User
-import com.hshar.eggegg.repository.OrganizationRepository
+import com.hshar.eggegg.model.transient.payload.JwtAuthenticationResponse
 import com.hshar.eggegg.repository.UserRepository
+import com.hshar.eggegg.security.JwtTokenProvider
 import com.hshar.eggegg.security.UserPrincipal
 import findOne
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
-class UserQuery : GraphQLQueryResolver {
+class UserQuery @Autowired constructor(
+        val userRepository: UserRepository,
+        val authenticationManager: AuthenticationManager,
+        val jwtTokenProvider: JwtTokenProvider) : GraphQLQueryResolver {
 
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var organizationRepsitory: OrganizationRepository
 
     fun getUser(id: String): User {
         return userRepository.findOne(id) ?: throw ResourceNotFoundException("User", "id", id)
@@ -29,10 +31,26 @@ class UserQuery : GraphQLQueryResolver {
                 ?: throw ResourceNotFoundException("User", "id", getCurrentUser().getId())
     }
 
-    fun usersByOrganization(organizationId: String): List<User> {
-        val org = organizationRepsitory.findOne(organizationId)
-                ?: throw ResourceNotFoundException("Organization", "id", organizationId)
-        return userRepository.findByOrganization(org)
+    fun signInUser(username: String, password: String): JwtAuthenticationResponse {
+        val authentication = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(
+                        username, password
+                )
+        )
+
+        SecurityContextHolder.getContext().authentication = authentication
+        val jwt = jwtTokenProvider.generateToken(authentication)
+
+        val user = userRepository.findByUsername(username)
+                ?: throw ResourceNotFoundException("User", "username", username)
+
+        return JwtAuthenticationResponse(
+                accessToken = jwt,
+                username = user.username,
+                publicAddress = user.publicAddress,
+                userAvatar = user.avatar,
+                userId = user.id
+        )
     }
 
     private fun getCurrentUser(): UserPrincipal {

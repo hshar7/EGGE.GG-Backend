@@ -16,8 +16,8 @@ class CustomUserDetailsService : UserDetailsService {
     lateinit var userRepository: UserRepository
 
     override fun loadUserByUsername(username: String): UserDetails {
-        val user = userRepository.findByPublicAddress(username)
-                ?: throw ResourceNotFoundException("User", "publicAddress", username)
+        val user = userRepository.findByUsername(username)
+                ?: throw ResourceNotFoundException("User", "username", username)
         return UserPrincipal.create(user)
     }
 

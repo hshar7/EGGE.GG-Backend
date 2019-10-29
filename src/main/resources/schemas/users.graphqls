@@ -2,24 +2,37 @@ type User {
     id: String!
     publicAddress: String!
     name: String
+    username: String!
     email: String
-    organization: AbstractOrganization
     avatar: String!
     createdAt: Date!
     updatedAt: Date!
 }
 
+type JwtAuthenticationResponse {
+    accessToken: String!
+    tokenType: String!
+    username: String
+    publicAddress: String
+    userAvatar: String
+    userId: String
+}
+
 extend type Query {
     user(id: String): User
+    signInUser(username: String, password: String): JwtAuthenticationResponse
     myProfile: User
-    usersByOrganization(organizationId: String): [User]
 }
 
 extend type Mutation {
-    metadata(metadata: UserInput): User
+    signUpUser(metadata: NewUserInput): User
+#    metadata(metadata: UserInput): User
 }
 
-input UserInput {
-    name: String
-    email: String
+input NewUserInput {
+    publicAddress: String!
+    username: String!
+    name: String!
+    email: String!
+    password: String!
 }

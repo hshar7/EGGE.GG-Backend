@@ -38,10 +38,9 @@ class ContributionAddedSubscriber(
                 val user = userRepository.findByPublicAddress(eventData._contributor) ?: userRepository.insert(User(
                         id = UUID.randomUUID().toString(),
                         publicAddress = eventData._contributor,
-                        organization = null,
-                        username = "123",
-                        privateKey = "123",
-                        password = "123", // TODO: These need proper values.. whole thing needs rework.
+                        username = eventData._contributor,
+                        email = eventData._contributor,
+                        password = "", // TODO: These need proper values.. whole thing needs rework.
                         createdAt = Date(),
                         updatedAt = Date()
                 ))
