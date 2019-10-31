@@ -26,7 +26,8 @@ extend type Query {
 
 extend type Mutation {
     signUpUser(metadata: NewUserInput): User
-#    metadata(metadata: UserInput): User
+    updateMyMetadata(metadata: UpdateUserInput): User
+    updateMyPassword(oldPassword: String, newPassword: String): Boolean
 }
 
 input NewUserInput {
@@ -35,4 +36,10 @@ input NewUserInput {
     name: String!
     email: String!
     password: String!
+}
+
+input UpdateUserInput {
+    username: String
+    name: String
+    email: String
 }

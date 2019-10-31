@@ -2,11 +2,15 @@ package com.hshar.eggegg.graphql.users
 
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.DuplicateResourceException
+import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.User
 import com.hshar.eggegg.repository.UserRepository
 import com.hshar.eggegg.security.UserPrincipal
+import findOne
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -15,19 +19,11 @@ import java.util.*
 @Service
 class UserMutation @Autowired constructor(
         val userRepository: UserRepository,
-        val passwordEncoder: PasswordEncoder
+        val passwordEncoder: PasswordEncoder,
+        val authenticationManager: AuthenticationManager
 ) : GraphQLMutationResolver {
 
     private val logger = KotlinLogging.logger {}
-
-//    fun metadata(metadata: NewUserInput): User {
-//        val user = userRepository.findOne(getCurrentUser().getId())
-//                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().getId())
-//        user.name = metadata.name ?: user.name
-//        user.email = metadata.email ?: user.email
-//
-//        return userRepository.save(user)
-//    }
 
     fun signUpUser(metadata: NewUserInput): User {
         // Check if user exists by public address and if password is "", then allow this user to own it
@@ -57,6 +53,32 @@ class UserMutation @Autowired constructor(
                 updatedAt = Date(),
                 createdAt = Date()
         ))
+    }
+
+    fun updateMyMetadata(metadata: UpdateUserInput): User {
+        val user = userRepository.findOne(getCurrentUser().getId())
+                ?: throw ResourceNotFoundException("User", "id", getCurrentUser().getId())
+        user.name = metadata.name ?: user.name
+        user.username = metadata.username ?: user.username
+        user.email = metadata.email ?: user.email
+
+        return userRepository.save(user)
+    }
+
+    fun updateMyPassword(oldPassword: String, newPassword: String): Boolean {
+        authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(
+                        getCurrentUser().username, oldPassword
+                )
+        )
+
+        val user = userRepository.findByUsername(getCurrentUser().username)
+                ?: throw ResourceNotFoundException("User", "username", getCurrentUser().username)
+
+        user.password = passwordEncoder.encode(newPassword)
+
+        userRepository.save(user)
+        return true
     }
 
     private fun getCurrentUser(): UserPrincipal {
