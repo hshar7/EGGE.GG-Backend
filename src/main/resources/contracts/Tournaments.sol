@@ -1,4 +1,4 @@
-pragma solidity 0.5.11;
+pragma solidity 0.5.7;
 
 import "./inherited/ERC20Token.sol";
 import "./inherited/ERC721Basic.sol";
@@ -18,7 +18,6 @@ contract Tournaments {
     }
 
     address superAdmin = 0xB6E58769550608DEF3043DCcbBE1Fa653af23151;
-    string[] public platforms;
     mapping(address => string[]) public organizerPlatforms;
 
     uint public numTournaments;
@@ -55,14 +54,15 @@ contract Tournaments {
 
     function whitelistOrganizer(address _organizer, string memory _platform) public onlySuperAdmin(msg.sender) {
         organizerPlatforms[_organizer][organizerPlatforms[_organizer].length - 1] = _platform;
+        emit OrganizerWhitelisted(_platform, _organizer);
     }
 
     function whitelistContributor(uint _tournamentId, address _newContributor) public onlyOrganizer(msg.sender, _tournamentId) {
         tournamentContributors[_tournamentId][tournamentContributors[_tournamentId].length - 1] = _newContributor;
+        emit ContributorWhitelisted(_tournamentId, _newContributor);
     }
 
     function newTournament(
-        address payable _organizer,
         string memory _data,
         uint _deadline,
         address _token,
@@ -73,10 +73,10 @@ contract Tournaments {
         bool _restrictContributors) public payable returns (uint) {
 
 
-        require(_tokenVersion == 0 || _tokenVersion == 20 || _tokenVersion == 721);
+        require(_tokenVersion == 0 || _tokenVersion == 20);
         require (_prizeDistribution.length == _maxPlayers);
 
-        if (equals(_platform, "default")) {
+        if (!equals(_platform, "default")) {
             bool allowed = false;
             for (uint i = 0; i <= organizerPlatforms[msg.sender].length; i++) {
                 if (equals(organizerPlatforms[msg.sender][i], _platform)) {
@@ -94,25 +94,25 @@ contract Tournaments {
 
         uint tournamentId = numTournaments;
 
-        Tournament storage tour = tournaments[tournamentId];
-        tour.organizer = _organizer;
-        tour.deadline = _deadline;
-        tour.tokenVersion = _tokenVersion;
+        tournaments[tournamentId] = Tournament({
+            organizer: msg.sender,
+            deadline: _deadline,
+            tokenVersion: _tokenVersion,
+            active: true,
+            maxPlayers: _maxPlayers,
+            platform: _platform,
+            restrictContributors: _restrictContributors,
+            token: _token,
+            balance: 0
+        });
+        tournamentContributors[tournamentId] = [msg.sender];
         prizeDistributions[tournamentId] = _prizeDistribution;
-        tour.active = true;
-        tour.maxPlayers = _maxPlayers;
-        tour.restrictContributors = _restrictContributors;
-        tournamentContributors[tournamentId][0] = msg.sender;
-
-        if (_tokenVersion != 0) {
-            tour.token = _token;
-        }
 
         numTournaments++;
 
         emit TournamentIssued(
             tournamentId,
-            _organizer,
+            msg.sender,
             _data,
             _deadline,
             _token,
@@ -241,4 +241,6 @@ contract Tournaments {
     event ContributionAdded(uint _tournamentId, address payable _contributor, uint _amount);
     event TournamentDeadlineChanged(uint _tournamentId, address _changer, uint _deadline);
     event TournamentFinalized(uint _tournamentId, address payable[] _winners, uint[] payouts);
+    event ContributorWhitelisted(uint _tournamentId, address _contributor);
+    event OrganizerWhitelisted(string _platform, address _organizer);
 }
