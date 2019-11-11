@@ -40,7 +40,8 @@ class ContributionAddedSubscriber(
                         publicAddress = eventData._contributor,
                         username = eventData._contributor,
                         email = eventData._contributor,
-                        password = "", // TODO: These need proper values.. whole thing needs rework.
+                        password = "",
+                        roles = mutableSetOf(),
                         createdAt = Date(),
                         updatedAt = Date()
                 ))
@@ -49,6 +50,8 @@ class ContributionAddedSubscriber(
                 if (tournament.participants.size == tournament.maxPlayers) {
                     tournament = TournamentOperations.generateBracket(tournament, matchRepository)
                 }
+            } else {
+                tournament.contributors[eventData._contributor] = eventData._amount.toBigDecimal()
             }
 
             tournament.prize += eventData._amount.toBigDecimal()

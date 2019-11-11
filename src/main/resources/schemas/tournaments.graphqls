@@ -33,6 +33,9 @@ type Tournament {
     numberOfRounds: Int
     pointsToWin: Int
     pointsDistribution: [Int]
+    contributorsRestricted: Boolean!
+    whitelistedContributors: [String]!
+    contributors: Object!
     rounds: [Object]
     deadline: Date!
     name: String!
@@ -54,7 +57,7 @@ type Tournament {
 }
 
 extend type Query {
-    tournaments(count: Int, offset: Int): [Tournament]!
+    tournaments(count: Int!, offset: Int!): [Tournament]!
     tournament(id: String!): Tournament
     findTournamentsByString(count: Int, offset: Int, fieldName: String, fieldData: String): [Tournament]!
     findTournamentsByBool(count: Int, offset: Int, fieldName: String, fieldData: Boolean): [Tournament]!

@@ -16,6 +16,7 @@ data class User(
         var password: String,
         var summary: String = "",
         var avatar: String = "https://s3.amazonaws.com/eggegg-imgs/egg.png",
+        var roles: MutableSet<Role>,
         @CreatedDate val createdAt: Date,
         @LastModifiedDate var updatedAt: Date
 )

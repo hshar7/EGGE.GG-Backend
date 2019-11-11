@@ -1,14 +1,18 @@
 package com.hshar.eggegg.graphql.users
 
+import className
 import com.coxautodev.graphql.tools.GraphQLMutationResolver
 import com.hshar.eggegg.exception.DuplicateResourceException
 import com.hshar.eggegg.exception.ResourceNotFoundException
 import com.hshar.eggegg.model.permanent.User
+import com.hshar.eggegg.model.transient.type.RoleName
+import com.hshar.eggegg.repository.RoleRepository
 import com.hshar.eggegg.repository.UserRepository
 import com.hshar.eggegg.security.UserPrincipal
 import findOne
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -19,6 +23,7 @@ import java.util.*
 @Service
 class UserMutation @Autowired constructor(
         val userRepository: UserRepository,
+        val roleRepository: RoleRepository,
         val passwordEncoder: PasswordEncoder,
         val authenticationManager: AuthenticationManager
 ) : GraphQLMutationResolver {
@@ -29,6 +34,9 @@ class UserMutation @Autowired constructor(
         // Check if user exists by public address and if password is "", then allow this user to own it
         val user = userRepository.findByPublicAddress(metadata.publicAddress)
 
+        val role = roleRepository.findByName(RoleName.ROLE_PLAYER)
+                ?: throw ResourceNotFoundException(roleRepository.className(), "name", RoleName.ROLE_PLAYER)
+
         if (user != null) {
             if (user.password != "") {
                 throw DuplicateResourceException("User already exists. ${metadata.publicAddress}")
@@ -38,6 +46,7 @@ class UserMutation @Autowired constructor(
                 user.email = metadata.email
                 user.username = metadata.username
                 user.name = metadata.name
+                user.roles = mutableSetOf(role)
                 user.updatedAt = Date()
                 return userRepository.save(user)
             }
@@ -50,9 +59,23 @@ class UserMutation @Autowired constructor(
                 username = metadata.username,
                 name = metadata.name,
                 email = metadata.email,
+                roles = mutableSetOf(role),
                 updatedAt = Date(),
                 createdAt = Date()
         ))
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    fun assignRoleToUser(roleName: RoleName, userId: String): User {
+        val user = userRepository.findOne(userId)
+                ?: throw ResourceNotFoundException(userRepository.className(), "id", userId)
+
+        val role = roleRepository.findByName(roleName)
+                ?: throw ResourceNotFoundException(roleRepository.className(), "name", roleName)
+
+        user.roles.add(role)
+
+        return userRepository.save(user)
     }
 
     fun updateMyMetadata(metadata: UpdateUserInput): User {

@@ -49,7 +49,8 @@ class UserQuery @Autowired constructor(
                 username = user.username,
                 publicAddress = user.publicAddress,
                 userAvatar = user.avatar,
-                userId = user.id
+                userId = user.id,
+                roles = user.roles
         )
     }
 

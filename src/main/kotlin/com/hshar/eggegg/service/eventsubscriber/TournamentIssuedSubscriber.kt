@@ -43,7 +43,8 @@ class TournamentIssuedSubscriber(
                     publicAddress = eventData._organizer,
                     username = eventData._organizer,
                     email = eventData._organizer,
-                    password = "", // TODO: These need proper values.. whole thing needs rework.
+                    password = "",
+                    roles = mutableSetOf(),
                     createdAt = Date(),
                     updatedAt = Date()
             ))
@@ -80,6 +81,9 @@ class TournamentIssuedSubscriber(
                     numberOfRounds = dataObj.numberOfRounds,
                     rounds = arrayListOf(),
                     pointsDistribution = dataObj.pointsDistribution,
+                    contributorsRestricted = eventData._restrictContributors,
+                    whitelistedContributors = arrayListOf(eventData._organizer),
+                    contributors = hashMapOf(),
                     pointsToWin = dataObj.pointsToWin,
                     participants = mutableSetOf(),
                     game = game,

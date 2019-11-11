@@ -1,3 +1,14 @@
+enum RoleName {
+    ROLE_PLAYER,
+    ROLE_ORGANIZER,
+    ROLE_ADMIN
+}
+
+type Role {
+    id: String!,
+    name: RoleName!
+}
+
 type User {
     id: String!
     publicAddress: String!
@@ -5,6 +16,7 @@ type User {
     username: String!
     email: String
     avatar: String!
+    roles: [Role]!
     createdAt: Date!
     updatedAt: Date!
 }
@@ -16,6 +28,7 @@ type JwtAuthenticationResponse {
     publicAddress: String
     userAvatar: String
     userId: String
+    roles: [Role]!
 }
 
 extend type Query {
@@ -25,9 +38,10 @@ extend type Query {
 }
 
 extend type Mutation {
-    signUpUser(metadata: NewUserInput): User
-    updateMyMetadata(metadata: UpdateUserInput): User
-    updateMyPassword(oldPassword: String, newPassword: String): Boolean
+    signUpUser(metadata: NewUserInput!): User
+    assignRoleToUser(roleName: RoleName!, userId: String!): User
+    updateMyMetadata(metadata: UpdateUserInput!): User
+    updateMyPassword(oldPassword: String!, newPassword: String!): Boolean
 }
 
 input NewUserInput {
