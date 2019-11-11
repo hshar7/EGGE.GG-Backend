@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.hshar.eggegg.model.permanent.User
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
-import java.util.ArrayList
 import java.util.Objects
+import java.util.stream.Collectors
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class UserPrincipal private constructor(
         private val id: String,
@@ -67,13 +68,17 @@ class UserPrincipal private constructor(
 
     companion object {
         fun create(user: User): UserPrincipal {
+            val authorities = user.roles.stream()
+                    .map { role -> SimpleGrantedAuthority(role.name.name) }
+                    .collect(Collectors.toList())
+
             return UserPrincipal(
                     user.id,
                     user.username,
                     user.name,
                     user.email,
                     user.password,
-                    ArrayList()
+                    authorities
             )
         }
     }

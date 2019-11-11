@@ -64,8 +64,9 @@ final class EventListenerService @Autowired constructor(
 
         subscribers.add(tournamentIssuedEvent(tournamentsContract))
         subscribers.add(contributionAddedEvent(tournamentsContract))
-        subscribers.add(tournamentDeadlineChangedEvent(tournamentsContract))
+//        subscribers.add(tournamentDeadlineChangedEvent(tournamentsContract)) => Not utilized at this time.
         subscribers.add(tournamentFinalizedEvent(tournamentsContract))
+        subscribers.add(contributorWhitelistedEvent(tournamentsContract))
     }
 
     private fun tournamentIssuedEvent(tournamentsContract: Tournaments)
@@ -131,6 +132,22 @@ final class EventListenerService @Autowired constructor(
         ).subscribeWith(TournamentFinalizedSubscriber(
                 tournamentRepository,
                 matchRepository,
+                web3DataRepository,
+                eventDataRepository,
+                eventRetryDataRepository
+        ))
+    }
+
+    private fun contributorWhitelistedEvent(tournamentsContract: Tournaments)
+            : DisposableSubscriber<Tournaments.ContributorWhitelistedEventResponse> {
+        val fromBlock = web3DataRepository.findOne(ContributorWhitelistedSubscriber.EVENT_NAME)?.fromBlock
+                ?: 0.toBigInteger()
+
+        return tournamentsContract.contributorWhitelistedEventFlowable(
+                DefaultBlockParameter.valueOf(fromBlock),
+                DefaultBlockParameterName.LATEST
+        ).subscribeWith(ContributorWhitelistedSubscriber(
+                tournamentRepository,
                 web3DataRepository,
                 eventDataRepository,
                 eventRetryDataRepository

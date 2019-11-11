@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 interface AbstractTournament {
     val id: String
@@ -42,6 +43,9 @@ data class Tournament(
         val platform: String = "master",
         val maxPlayers: Int,
         val prizeDistribution: ArrayList<Int>,
+        val contributorsRestricted: Boolean,
+        var whitelistedContributors: ArrayList<String>,
+        var contributors: HashMap<String, BigDecimal>,
         var winners: MutableList<String>,
         var eventDataWinners: MutableList<String> = mutableListOf(),
         @DBRef var game: Game,
