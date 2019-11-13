@@ -1,0 +1,9 @@
+[submodule "model"]
+	path = model
+	url = git@github.com:ConsenSys/DAORY-datalayer.git
+[submodule "src\\main\\kotlin\\com\\hshar\\eggegg\\model"]
+	path = src\\main\\kotlin\\com\\hshar\\eggegg\\model
+	url = git@github.com:ConsenSys/DAORY-datalayer.git
+[submodule "src\\main\\kotlin\\com\\hshar\\daory\\model"]
+	path = src\\main\\kotlin\\com\\hshar\\daory\\model
+	url = git@github.com:ConsenSys/DAORY-datalayer.git
