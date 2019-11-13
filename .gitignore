@@ -23,3 +23,6 @@
 /nbdist/
 /.nb-gradle/
 /build/
+
+### Submodules ###
+/com/hshar/daory_web/model
